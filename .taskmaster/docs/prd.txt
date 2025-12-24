@@ -1,0 +1,1682 @@
+# Automated Property Registration (APR) System - Product Requirements Document
+# Repository Planning Graph (RPG) Method
+
+---
+
+<overview>
+
+## Problem Statement
+
+Zimbabwe's communal land sectional title registration process is fragmented across multiple government agencies (Planning, Surveyor-General, Deeds Office) with no integrated system. This leads to:
+
+- **Data Inconsistencies**: Planning approvals, survey data, and deeds records exist in silos, causing conflicting information
+- **Process Delays**: Manual handoffs between departments take months, with no visibility into application status
+- **Legal Vulnerabilities**: Lack of immutable audit trails creates disputes and fraudulent registrations
+- **No Spatial Truth**: Survey data is not integrated with legal rights, causing boundary disputes
+- **Trust Deficit**: Citizens and financial institutions cannot verify authenticity of title certificates
+
+The result: Communal land owners cannot access credit, property disputes proliferate, and economic development stagnates.
+
+## Target Users
+
+**Primary Users:**
+- **Certified Planners** - Submit sectional scheme plans for communal land developments
+- **Land Surveyors** - Create spatial data and section diagrams following approved plans
+- **Surveyor-General Officers** - Validate and seal survey computations
+- **Conveyancers** - Draft legal descriptions and submit deeds packets
+- **Deeds Examiners** - Examine legal compliance before registration
+- **Registrar of Deeds** - Register sectional titles and issue certificates
+
+**Secondary Users:**
+- **Planning Authority (Lands Department)** - Review and approve scheme submissions
+- **Property Owners** - View their title certificates and scheme information
+- **Financial Institutions** - Verify title authenticity for lending decisions
+- **Courts & Legal Practitioners** - Access records for dispute resolution
+- **Government Analysts** - Generate reports on land administration performance
+
+## Success Metrics
+
+- **80% reduction** in time from planning approval to title issuance (from 6+ months to <6 weeks)
+- **100% spatial-legal consistency** - Zero discrepancies between survey data and registered titles
+- **Immutable audit trail** for all transactions (planning → survey → deeds)
+- **< 0.1% error rate** in automated computations (areas, quotas, boundaries)
+- **Real-time verification** for external stakeholders (banks, courts) with 99.9% uptime
+- **Zero data loss** through versioned, hash-secured records
+- **National coverage** supporting all 10 provinces with concurrent multi-agency operations
+
+</overview>
+
+---
+
+<functional-decomposition>
+
+## Capability Tree
+
+### Capability: Public Information & Transparency
+[National dashboard providing read-only access to registration statistics and system status]
+
+#### Feature: National Statistics Dashboard
+- **Description**: Display aggregated metrics on deeds processed, plans submitted, and provincial activity
+- **Inputs**: Database queries across all modules, date range filters
+- **Outputs**: Interactive charts, downloadable reports, KPI cards
+- **Behavior**: Auto-refresh statistics every 15 minutes, support filtering by province/district/month
+
+#### Feature: Public Record Search
+- **Description**: Allow public to search for registered schemes by address or scheme number
+- **Inputs**: Search query (address/scheme number), optional filters
+- **Outputs**: Read-only scheme summaries, registration status, public metadata
+- **Behavior**: Execute spatial/text search, return results with pagination, log all queries
+
+---
+
+### Capability: Planning & Scheme Submission
+[End-to-end workflow for planners to submit sectional scheme proposals and Planning Authority to review/approve]
+
+#### Feature: Scheme Plan Creation
+- **Description**: Planner creates new sectional scheme application with metadata and layout
+- **Inputs**: Scheme name, parent communal land ID, number of sections, proposed areas, planning documents
+- **Outputs**: Unique plan ID, versioned record in database
+- **Behavior**: Validate required fields, assign plan ID, initialize status as 'submitted', store document references
+
+#### Feature: Document Upload & Validation
+- **Description**: Upload planning layouts, land-use justifications, compliance documents
+- **Inputs**: PDF/image files (max 50MB), file metadata
+- **Outputs**: Stored files in Supabase Storage with references
+- **Behavior**: Validate file types (.pdf, .jpg, .png, .dwg), scan for corruption, generate checksums, store in versioned structure
+
+#### Feature: GIS Planning Visualization
+- **Description**: Display parent communal land, proposed scheme overlay, and neighboring cadastral parcels
+- **Inputs**: Parent land geometry, proposed unit boundaries, cadastral layer from PostGIS
+- **Outputs**: Interactive Leaflet map with layers, measurement tools
+- **Behavior**: Fetch geometries from PostGIS, render on Leaflet, support zoom/pan/measure, highlight conflicts
+
+#### Feature: Planning Authority Review
+- **Description**: Lands Department reviews scheme for compliance with planning regulations
+- **Inputs**: Submitted plan ID, review checklist
+- **Outputs**: Approval/rejection decision with timestamp and digital signature
+- **Behavior**: Load plan details, provide annotation tools, enforce mandatory review fields, lock plan on approval
+
+#### Feature: Plan Locking & Status Management
+- **Description**: Approved plans become immutable to preserve planning intent
+- **Inputs**: Approval decision event
+- **Outputs**: Updated plan record with locked=true, status='approved'
+- **Behavior**: Set immutability flag, prevent further edits, trigger notification to Survey module
+
+---
+
+### Capability: Survey Computation & Spatial Validation
+[Surveyors create geometric data following approved plans; SG validates and seals survey]
+
+#### Feature: Parent Parcel Geometry Upload
+- **Description**: Surveyor uploads boundary coordinates and control points for parent communal land
+- **Inputs**: Coordinate file (CSV/shapefile), datum/projection metadata, control point data
+- **Outputs**: Parent parcel geometry stored in PostGIS
+- **Behavior**: Parse coordinate file, validate closure, transform to standard projection (UTM), detect overlaps with adjacent lands
+
+#### Feature: Outside Figure Computation
+- **Description**: Automated computation of parent land boundary, area, and accuracy
+- **Inputs**: Boundary coordinates, control measurements
+- **Outputs**: Computed area (m²), closure error, accuracy report
+- **Behavior**: Execute traverse computation, apply least squares adjustment, validate closure within tolerance (<1:10,000)
+
+#### Feature: Sectional Geometry Generation
+- **Description**: Generate 3D unit geometries from approved plan specifications
+- **Inputs**: Approved plan sections, building footprint, floor levels
+- **Outputs**: Unit polygons with computed areas, dimensions, floor designations
+- **Behavior**: For each unit, compute boundary from plan, validate containment within parent, check no overlaps
+
+#### Feature: Participation Quota Calculation
+- **Description**: Calculate each unit's share of common property using South African formula
+- **Inputs**: Unit areas, common area
+- **Outputs**: Participation quotas (percentages summing to 100%)
+- **Behavior**: quota = (unit_area / total_unit_area) * 100, validate sum = 100%, round to 4 decimals
+
+#### Feature: Automated Scheme Plan Generation
+- **Description**: Generate sectional title scheme plans conforming to SG standards
+- **Inputs**: Survey geometries, unit schedules, template configuration
+- **Outputs**: Multi-page PDF with title sheet, section diagrams, area schedules, notes
+- **Behavior**: Populate template, render geometries to scale, generate legends, insert disclaimers
+
+#### Feature: Topology Validation
+- **Description**: Detect spatial errors (overlaps, gaps, invalid geometries)
+- **Inputs**: All unit geometries for a scheme
+- **Outputs**: Validation report with error locations
+- **Behavior**: Run PostGIS ST_IsValid, ST_Overlaps, ST_Union checks, flag errors with coordinates
+
+#### Feature: Surveyor-General Review & Sealing
+- **Description**: SG Officer reviews survey for compliance and applies digital seal
+- **Inputs**: Survey plan ID, review checklist, digital signature credentials
+- **Outputs**: Sealed survey with hash, approval certificate
+- **Behavior**: Load survey data, provide markup tools, execute compliance checks, apply seal hash, set status='sealed'
+
+---
+
+### Capability: Sectional Scheme Registration
+[Deeds Office registers the scheme as a legal entity and creates Body Corporate]
+
+#### Feature: Scheme Number Allocation
+- **Description**: Allocate unique national scheme registration number
+- **Inputs**: Sealed survey, province code
+- **Outputs**: Formatted scheme number (e.g., SS/2025/HARARE/001)
+- **Behavior**: Query max scheme number for province/year, increment, format, reserve in database
+
+#### Feature: Body Corporate Creation
+- **Description**: Register statutory Body Corporate for scheme governance
+- **Inputs**: Scheme ID, initial trustees (optional), registration date
+- **Outputs**: Body Corporate ID, registration certificate
+- **Behavior**: Create body_corporate record, link to scheme, generate certificate template
+
+#### Feature: Scheme Registry Update
+- **Description**: Record scheme in national sectional schemes register
+- **Inputs**: Scheme number, communal land ID, sealed survey reference
+- **Outputs**: Immutable registry entry with hash
+- **Behavior**: Insert into apr.sectional_schemes, compute record hash, store in records.record_registry
+
+---
+
+### Capability: Deeds Creation & Title Registration
+[Conveyancers draft title deeds; Deeds Office examines and registers; System issues certificates]
+
+#### Feature: Unit-Level Legal Description Drafting
+- **Description**: Conveyancer creates legal description for each unit following sealed survey
+- **Inputs**: Scheme ID, section ID, holder details, conditions/restrictions
+- **Outputs**: Draft deeds packet with legal descriptions
+- **Behavior**: Retrieve sealed survey data, populate legal description template, validate against survey, attach tenure conditions
+
+#### Feature: Deeds Packet Submission
+- **Description**: Conveyancer submits complete deeds packet for examination
+- **Inputs**: Draft deeds, supporting documents, conveyancer signature
+- **Outputs**: Submission ID, status='under_examination'
+- **Behavior**: Validate completeness, check against sealed survey, assign to examiner queue
+
+#### Feature: Legal Compliance Examination
+- **Description**: Deeds Examiner validates legal compliance of submitted deeds
+- **Inputs**: Deeds packet, examination checklist
+- **Outputs**: Examination report with defects (if any) or approval
+- **Behavior**: Cross-validate with SG plan, check communal tenure rules, verify signatures, flag defects or approve
+
+#### Feature: Title Registration
+- **Description**: Registrar registers approved title in national deeds register
+- **Inputs**: Approved deeds packet, registrar credentials
+- **Outputs**: Registered title with registration number and date
+- **Behavior**: Allocate title number, insert into apr.sectional_titles, set status='registered', apply registrar signature
+
+#### Feature: Certificate of Sectional Title Generation
+- **Description**: Automatically generate QR-coded, hash-secured title certificates
+- **Inputs**: Registered title ID, certificate template selection
+- **Outputs**: PDF certificate with QR code, digital signatures, hash
+- **Behavior**: Populate template with title data, generate QR code linking to verification URL, compute document hash, apply signatures, store in Supabase Storage
+
+---
+
+### Capability: Rights Management & Transfers
+[Handle post-registration operations: transfers, mortgages, leases, amendments]
+
+#### Feature: Ownership Transfer Processing
+- **Description**: Record transfer of unit ownership (sale, inheritance, gift)
+- **Inputs**: Transfer instrument, new holder details, consideration amount
+- **Outputs**: Updated title record, new certificate
+- **Behavior**: Validate current owner, record transfer, version previous title, issue new certificate
+
+#### Feature: Mortgage/Charge Registration
+- **Description**: Register financial institution's charge over a unit
+- **Inputs**: Mortgage deed, lender details, amount secured
+- **Outputs**: Encumbrance record linked to title
+- **Behavior**: Validate title status, record charge, notify holder, update title certificate with encumbrance note
+
+#### Feature: Lease Registration
+- **Description**: Register long-term leases on sectional units
+- **Inputs**: Lease agreement, lessee details, term
+- **Outputs**: Lease record with start/end dates
+- **Behavior**: Validate owner consent, record lease, compute expiry, set reminders
+
+---
+
+### Capability: Scheme Amendments & Extensions
+[Handle changes to registered schemes: extensions, subdivisions, consolidations]
+
+#### Feature: Scheme Extension Application
+- **Description**: Process applications to add new sections to existing schemes
+- **Inputs**: Extension plan, affected units, additional survey data
+- **Outputs**: Amended scheme record, superseded history
+- **Behavior**: Validate survey compatibility, re-compute quotas, version scheme record, trigger re-approval workflow
+
+#### Feature: Section Subdivision
+- **Description**: Split a registered section into multiple units
+- **Inputs**: Subdivision plan, new section specifications
+- **Outputs**: New section records, cancelled original section
+- **Behavior**: Validate owner consent, create new sections, adjust quotas, re-issue certificates
+
+---
+
+### Capability: Dispute Resolution & Objections
+[Manage objections and disputes during scheme lifecycle]
+
+#### Feature: Objection Window Management
+- **Description**: Allow public objection period after plan submission
+- **Inputs**: Scheme plan submission event
+- **Outputs**: Objection period dates, notification to stakeholders
+- **Behavior**: Set 30-day objection window, notify neighboring landholders, accept objection submissions
+
+#### Feature: Objection Workflow
+- **Description**: Route objections to appropriate authority for resolution
+- **Inputs**: Objection submission, supporting documents
+- **Outputs**: Objection record, hearing schedule
+- **Behavior**: Assign objection ID, notify scheme applicant, schedule hearing, track resolution
+
+---
+
+### Capability: User Management & Digital Signatures
+[RBAC, user lifecycle, PKI integration]
+
+#### Feature: Role-Based Access Control
+- **Description**: Enforce institutional separation of duties through roles
+- **Inputs**: User role assignment (Planner, Surveyor, Deeds Examiner, etc.)
+- **Outputs**: Granular permissions per module/operation
+- **Behavior**: Check user role on every operation, deny unauthorized actions, log access attempts
+
+#### Feature: User Registration & Approval
+- **Description**: Register professional users with credential verification
+- **Inputs**: Registration form, professional credentials, supporting documents
+- **Outputs**: User account (pending approval)
+- **Behavior**: Validate credentials, assign to approval queue, notify admin, activate on approval
+
+#### Feature: Digital Signature Integration (PKI)
+- **Description**: Integrate external PKI (EJBCA) for legally binding signatures
+- **Inputs**: Document hash, signatory role, timestamp
+- **Outputs**: Signature ID, certificate chain, signed document reference
+- **Behavior**: Send hash to PKI service, receive signature, store certificate serial, link to document
+
+---
+
+### Capability: Analytics & Reporting
+[Spatial and statistical analysis for decision-makers]
+
+#### Feature: Provincial Performance Dashboards
+- **Description**: Display registration metrics by province, district, month
+- **Inputs**: Database aggregations, date range filters
+- **Outputs**: Charts (bar, line, pie), KPI cards, trend analysis
+- **Behavior**: Query aggregated data, render with Recharts, support drill-down
+
+#### Feature: Spatial Analytics
+- **Description**: GIS-based analysis of sectional scheme distribution
+- **Inputs**: Spatial queries on PostGIS data
+- **Outputs**: Heat maps, density analysis, boundary overlays
+- **Behavior**: Execute ST_Union, ST_Buffer queries, render on Leaflet, export as GeoJSON
+
+#### Feature: Export & Reporting
+- **Description**: Generate exportable reports for audits and policy analysis
+- **Inputs**: Report template, filters
+- **Outputs**: PDF/Excel/CSV reports
+- **Behavior**: Query data, populate template, format, serve download
+
+---
+
+### Capability: Public Verification & Trust
+[External stakeholder access for record verification]
+
+#### Feature: Certificate Verification Portal
+- **Description**: Public portal to verify authenticity of title certificates
+- **Inputs**: Certificate number or QR code scan
+- **Outputs**: Verification status, certificate details (if valid)
+- **Behavior**: Look up certificate by ID, validate hash, check signature chain, display result
+
+#### Feature: Signature Validation
+- **Description**: Verify digital signatures against PKI certificate chain
+- **Inputs**: Document ID, signature ID
+- **Outputs**: Signature validity status, signer details, timestamp
+- **Behavior**: Call PKI service validation API, check certificate revocation, return result
+
+#### Feature: Audit Trail Access
+- **Description**: Provide read-only access to immutable audit logs for legal proceedings
+- **Inputs**: Scheme ID or title ID, access credentials (court order)
+- **Outputs**: Complete audit trail with timestamps, actors, actions
+- **Behavior**: Query records.record_registry, reconstruct timeline, display chronologically
+
+</functional-decomposition>
+
+---
+
+<structural-decomposition>
+
+## Repository Structure
+
+```
+apr-system/
+├── app/                                  # Next.js App Router
+│   ├── (public)/                        # Public routes (Module 0)
+│   │   ├── page.tsx                     # Landing page
+│   │   ├── dashboard/                   # Public dashboards
+│   │   └── verify/                      # Certificate verification
+│   ├── (auth)/                          # Authenticated routes
+│   │   ├── planning/                    # Module 1
+│   │   │   ├── schemes/                 # Scheme management
+│   │   │   ├── submissions/             # New submissions
+│   │   │   └── review/                  # Planning Authority review
+│   │   ├── survey/                      # Module 2
+│   │   │   ├── computations/            # Survey computations
+│   │   │   ├── validation/              # Topology validation
+│   │   │   └── approval/                # SG approval
+│   │   ├── deeds/                       # Modules 3 & 4
+│   │   │   ├── schemes/                 # Scheme registration
+│   │   │   ├── titles/                  # Title creation/registration
+│   │   │   └── certificates/            # Certificate generation
+│   │   ├── operations/                  # Module 5
+│   │   │   ├── transfers/               # Ownership transfers
+│   │   │   ├── mortgages/               # Charge registration
+│   │   │   └── amendments/              # Scheme amendments
+│   │   ├── admin/                       # Module 6
+│   │   │   ├── users/                   # User management
+│   │   │   └── signatures/              # Digital signature setup
+│   │   └── analytics/                   # Module 7
+│   │       ├── reports/                 # Report generation
+│   │       └── spatial/                 # GIS analytics
+│   └── api/                             # API routes
+│       └── webhooks/                    # External integrations
+├── components/                          # React components
+│   ├── ui/                              # Shadcn/UI primitives
+│   ├── maps/                            # GIS components
+│   │   ├── LeafletMap.tsx               # Base map component
+│   │   ├── ParcelLayer.tsx              # Parcel visualization
+│   │   └── SchemeOverlay.tsx            # Scheme overlay
+│   ├── forms/                           # Form components
+│   ├── tables/                          # Data tables
+│   └── documents/                       # Document viewers
+│       ├── PDFViewer.tsx                # PDF display
+│       └── ImageViewer.tsx              # Image display
+├── lib/                                 # Core libraries
+│   ├── supabase/                        # Supabase client
+│   │   ├── client.ts                    # Browser client
+│   │   ├── server.ts                    # Server client
+│   │   └── middleware.ts                # Auth middleware
+│   ├── spatial/                         # Spatial computations
+│   │   ├── geometry.ts                  # Geometry utilities
+│   │   ├── validation.ts                # Topology validation
+│   │   ├── computations.ts              # Area/quota calculations
+│   │   └── cogo.ts                      # Coordinate geometry
+│   ├── workflows/                       # State machines
+│   │   ├── planning-workflow.ts         # Planning state machine
+│   │   ├── survey-workflow.ts           # Survey state machine
+│   │   └── deeds-workflow.ts            # Deeds state machine
+│   ├── documents/                       # Document generation
+│   │   ├── templates/                   # PDF templates
+│   │   ├── certificate-generator.ts     # Certificate creation
+│   │   └── plan-generator.ts            # Scheme plan creation
+│   ├── validation/                      # Business rules
+│   │   ├── schema-validators.ts         # JSON schema validation
+│   │   └── business-rules.ts            # Domain validation
+│   └── pki/                             # PKI integration
+│       ├── ejbca-client.ts              # EJBCA API client
+│       └── signature-verifier.ts        # Signature validation
+├── supabase/                            # Supabase configuration
+│   ├── migrations/                      # Database migrations
+│   │   ├── 001_foundation.sql           # Foundation tables
+│   │   ├── 002_planning.sql             # Planning module
+│   │   ├── 003_survey.sql               # Survey module
+│   │   ├── 004_deeds.sql                # Deeds module
+│   │   └── 005_operations.sql           # Operations module
+│   ├── functions/                       # Edge Functions
+│   │   ├── workflow-engine/             # Workflow orchestration
+│   │   ├── computations/                # Survey computations
+│   │   ├── notifications/               # Email/SMS notifications
+│   │   └── integrations/                # External system integration
+│   └── seed.sql                         # Test data
+├── types/                               # TypeScript types
+│   ├── database.ts                      # Generated from Supabase
+│   ├── spatial.ts                       # GIS type definitions
+│   └── workflows.ts                     # State machine types
+└── tests/                               # Test suites
+    ├── unit/                            # Unit tests
+    ├── integration/                     # Integration tests
+    └── e2e/                             # End-to-end tests
+```
+
+## Module Definitions
+
+### Module: Public Information (Module 0)
+- **Maps to capability**: Public Information & Transparency
+- **Responsibility**: Provide read-only access to national statistics and verification
+- **File structure**:
+  ```
+  app/(public)/
+  ├── page.tsx                  # Landing page
+  ├── dashboard/page.tsx        # Statistics dashboard
+  └── verify/page.tsx           # Certificate verification
+  ```
+- **Exports**:
+  - `LandingPage` - Public landing page with national inscription
+  - `PublicDashboard` - Statistics visualization component
+  - `VerificationPortal` - Certificate verification interface
+
+### Module: Planning (Module 1)
+- **Maps to capability**: Planning & Scheme Submission
+- **Responsibility**: Scheme submission and Planning Authority approval workflow
+- **File structure**:
+  ```
+  app/(auth)/planning/
+  ├── schemes/                  # CRUD for schemes
+  ├── submissions/              # New submissions
+  └── review/                   # Authority review
+  lib/workflows/planning-workflow.ts
+  ```
+- **Exports**:
+  - `createScheme()` - Initialize new scheme
+  - `uploadPlanDocuments()` - Handle document uploads
+  - `reviewScheme()` - Planning Authority review
+  - `lockApprovedPlan()` - Immutability enforcement
+
+### Module: Survey (Module 2)
+- **Maps to capability**: Survey Computation & Spatial Validation
+- **Responsibility**: Spatial data creation, validation, and SG approval
+- **File structure**:
+  ```
+  app/(auth)/survey/
+  ├── computations/             # Computation UI
+  ├── validation/               # Topology checks
+  └── approval/                 # SG review
+  lib/spatial/
+  ├── geometry.ts
+  ├── validation.ts
+  ├── computations.ts
+  └── cogo.ts
+  ```
+- **Exports**:
+  - `computeOutsideFigure()` - Boundary computation
+  - `generateSectionalGeometries()` - Unit geometry creation
+  - `validateTopology()` - Spatial error detection
+  - `calculateQuotas()` - Participation quota computation
+  - `sealSurvey()` - SG digital seal application
+
+### Module: Deeds (Modules 3 & 4)
+- **Maps to capability**: Sectional Scheme Registration, Deeds Creation & Title Registration
+- **Responsibility**: Scheme registration, deeds examination, title issuance
+- **File structure**:
+  ```
+  app/(auth)/deeds/
+  ├── schemes/                  # Scheme registration
+  ├── titles/                   # Title CRUD
+  └── certificates/             # Certificate generation
+  lib/documents/
+  ├── certificate-generator.ts
+  └── plan-generator.ts
+  ```
+- **Exports**:
+  - `allocateSchemeNumber()` - Unique scheme numbering
+  - `createBodyCorporate()` - Body Corporate registration
+  - `examineDeedsPacket()` - Legal compliance check
+  - `registerTitle()` - Title registration
+  - `generateCertificate()` - Certificate creation with QR/hash
+
+### Module: Operations (Module 5)
+- **Maps to capability**: Rights Management & Transfers, Scheme Amendments & Extensions, Dispute Resolution
+- **Responsibility**: Post-registration operations and amendments
+- **File structure**:
+  ```
+  app/(auth)/operations/
+  ├── transfers/
+  ├── mortgages/
+  └── amendments/
+  ```
+- **Exports**:
+  - `processTransfer()` - Ownership transfer
+  - `registerMortgage()` - Charge registration
+  - `processAmendment()` - Scheme amendment workflow
+
+### Module: Admin (Module 6)
+- **Maps to capability**: User Management & Digital Signatures
+- **Responsibility**: RBAC, user lifecycle, PKI integration
+- **File structure**:
+  ```
+  app/(auth)/admin/
+  ├── users/
+  └── signatures/
+  lib/pki/
+  ├── ejbca-client.ts
+  └── signature-verifier.ts
+  ```
+- **Exports**:
+  - `registerUser()` - User registration with credential verification
+  - `assignRole()` - RBAC role assignment
+  - `signDocument()` - PKI signature application
+  - `verifySignature()` - Signature validation
+
+### Module: Analytics (Module 7)
+- **Maps to capability**: Analytics & Reporting, Public Verification & Trust
+- **Responsibility**: Reporting, spatial analysis, audit trails
+- **File structure**:
+  ```
+  app/(auth)/analytics/
+  ├── reports/
+  └── spatial/
+  ```
+- **Exports**:
+  - `generateReport()` - Report generation
+  - `spatialAnalysis()` - GIS-based analytics
+  - `exportAuditTrail()` - Immutable history access
+
+### Module: Spatial Core
+- **Maps to capability**: Survey Computation & Spatial Validation (foundation)
+- **Responsibility**: Low-level geometry operations and PostGIS integration
+- **File structure**:
+  ```
+  lib/spatial/
+  ├── geometry.ts               # Core geometry utilities
+  ├── validation.ts             # Topology validation
+  ├── computations.ts           # Area/distance calculations
+  └── cogo.ts                   # Coordinate geometry (traverse, closure)
+  ```
+- **Exports**:
+  - `parseCoordinates()` - Parse CSV/shapefile coordinates
+  - `computeClosure()` - Traverse closure computation
+  - `transformProjection()` - Coordinate system transformation
+  - `validateGeometry()` - PostGIS ST_IsValid wrapper
+  - `detectOverlaps()` - ST_Overlaps spatial query
+
+### Module: Workflow Engine
+- **Maps to capability**: All capabilities (orchestration layer)
+- **Responsibility**: State machine execution, status transitions, cross-module coordination
+- **File structure**:
+  ```
+  lib/workflows/
+  ├── planning-workflow.ts
+  ├── survey-workflow.ts
+  └── deeds-workflow.ts
+  supabase/functions/workflow-engine/
+  ```
+- **Exports**:
+  - `executeWorkflow()` - State machine executor
+  - `transitionState()` - Status transition with validation
+  - `notifyNextActor()` - Cross-module handoff
+
+</structural-decomposition>
+
+---
+
+<dependency-graph>
+
+## Dependency Chain
+
+### Foundation Layer (Phase 0)
+No dependencies - these must be built first and are foundational to all other modules.
+
+- **Supabase Foundation**: Database, Auth, Storage setup with PostGIS extension
+- **Type Definitions**: TypeScript types for database schema, spatial data, workflows
+- **UI Primitives**: Shadcn/UI components (buttons, forms, tables, dialogs)
+- **Error Handling**: Global error boundaries, logging infrastructure
+- **Configuration**: Environment variables, feature flags, constants
+
+### Data & Spatial Layer (Phase 1)
+Depends on: [Foundation Layer]
+
+- **Spatial Core Module**: Depends on [PostGIS extension, Type Definitions]
+  - Provides: Geometry utilities, coordinate computations, topology validation
+- **Workflow Engine Module**: Depends on [Supabase Auth, Type Definitions]
+  - Provides: State machines, status transitions, orchestration
+- **Document Templates**: Depends on [Configuration]
+  - Provides: PDF templates for certificates, scheme plans, reports
+- **Validation Rules Module**: Depends on [Type Definitions]
+  - Provides: Schema validators, business rule enforcement
+
+### Planning Module (Phase 2)
+Depends on: [Spatial Core, Workflow Engine, Validation Rules, UI Primitives]
+
+- **Planning Module**: Implements Module 1 capabilities
+  - Uses: Workflow Engine for approval states
+  - Uses: Validation Rules for scheme validation
+  - Uses: Spatial Core for GIS visualization
+  - Provides: Approved, locked schemes as input to Survey
+
+### Survey Module (Phase 3)
+Depends on: [Planning Module (approved plans), Spatial Core, Document Templates]
+
+- **Survey Module**: Implements Module 2 capabilities
+  - **Critical dependency**: Cannot start without Planning Module approval
+  - Uses: Spatial Core for all geometry operations
+  - Uses: Document Templates for scheme plan generation
+  - Provides: Sealed survey data as input to Deeds
+
+### Deeds Module (Phase 4)
+Depends on: [Survey Module (sealed surveys), Workflow Engine, Document Templates]
+
+- **Scheme Registration (Module 3)**: Depends on [Survey Module sealed status]
+  - Uses: Workflow Engine for registration workflow
+  - Provides: Registered schemes for title creation
+- **Title Creation & Registration (Module 4)**: Depends on [Scheme Registration]
+  - **Critical dependency**: Cannot proceed without sealed survey AND registered scheme
+  - Uses: Document Templates for certificate generation
+  - Uses: PKI Integration for digital signatures
+
+### PKI Integration Module (Phase 5)
+Depends on: [Error Handling, Type Definitions, All signing modules]
+
+- **PKI Module**: Implements digital signature integration with EJBCA
+  - Uses: External EJBCA API
+  - Provides: Signature services to Planning, Survey, Deeds modules
+  - Note: Can be developed in parallel with Phase 4 and integrated later
+
+### Operations Module (Phase 6)
+Depends on: [Deeds Module (registered titles), Workflow Engine, Spatial Core]
+
+- **Operations Module**: Implements Module 5 capabilities
+  - Uses: Workflow Engine for transfer/amendment workflows
+  - Uses: Spatial Core for amendment geometry
+  - Operates on: Existing registered titles
+
+### Admin Module (Phase 7)
+Depends on: [Supabase Auth, PKI Integration, Workflow Engine]
+
+- **Admin Module**: Implements Module 6 capabilities
+  - Uses: Supabase Auth for RBAC
+  - Uses: PKI Integration for user signature setup
+  - Provides: User management for all modules
+
+### Analytics & Verification Module (Phase 8)
+Depends on: [All data-generating modules, Spatial Core, PKI Integration]
+
+- **Analytics Module**: Implements Module 7 capabilities
+  - Reads from: All module databases
+  - Uses: Spatial Core for GIS analytics
+- **Public Verification Module**: Implements Module 0 verification features
+  - Uses: PKI Integration for signature verification
+  - Reads from: All module databases
+
+### Public Dashboard (Phase 9)
+Depends on: [Analytics Module, UI Primitives]
+
+- **Public Dashboard**: Implements Module 0 dashboard
+  - Uses: Analytics Module for aggregated statistics
+  - No dependencies on write operations - read-only
+
+## Dependency Validation Rules
+
+**Blocking Dependencies** (System enforces these):
+1. Survey module **cannot retrieve** schemes unless `planning.status = 'approved' AND planning.locked = true`
+2. Deeds module **cannot proceed** unless `survey.status = 'sealed'`
+3. Operations module **cannot process transfers** unless `title.registration_status = 'registered'`
+
+**Data Flow Dependencies**:
+- Planning → Survey: Approved plan ID
+- Survey → Deeds: Sealed survey ID + geometry data
+- Deeds → Operations: Registered title ID
+
+**Cross-Cutting Dependencies**:
+- All authenticated modules depend on Supabase Auth (Foundation)
+- All spatial operations depend on Spatial Core (Phase 1)
+- All workflows depend on Workflow Engine (Phase 1)
+- All document generation depends on Document Templates (Phase 1)
+
+</dependency-graph>
+
+---
+
+<implementation-roadmap>
+
+## Development Phases
+
+### Phase 0: Foundation & Infrastructure
+**Goal**: Establish development environment, database schema, and core utilities
+
+**Entry Criteria**: Clean Next.js repository
+
+**Tasks**:
+- [ ] Initialize Next.js project with App Router, TypeScript, Tailwind CSS (depends on: none)
+  - Acceptance criteria: `npm run dev` serves homepage
+  - Test strategy: Smoke test on http://localhost:3000
+
+- [ ] Setup Supabase project with PostGIS extension (depends on: none)
+  - Acceptance criteria: PostGIS extension enabled, test spatial query succeeds
+  - Test strategy: Execute `SELECT PostGIS_Version()` via Supabase SQL editor
+
+- [ ] Create database migration foundation (depends on: Supabase setup)
+  - Acceptance criteria: Migration files in `supabase/migrations/`, `apr.*` schema created
+  - Test strategy: Run migrations, verify schema exists
+
+- [ ] Install and configure Shadcn/UI components (depends on: Next.js init)
+  - Acceptance criteria: Button, Form, Table, Dialog components available
+  - Test strategy: Render test page with all primitives
+
+- [ ] Setup TypeScript types from Supabase (depends on: Database migrations)
+  - Acceptance criteria: `types/database.ts` generated with all table types
+  - Test strategy: Import types in code, no TypeScript errors
+
+- [ ] Create global error handling and logging (depends on: Next.js init)
+  - Acceptance criteria: Error boundaries catch errors, logs persisted
+  - Test strategy: Trigger error, verify caught and logged
+
+**Exit Criteria**: 
+- Supabase connected with PostGIS enabled
+- Database schema deployed
+- TypeScript types generated
+- UI primitives render correctly
+
+**Delivers**: A scaffolded application ready for module development
+
+---
+
+### Phase 1: Spatial Core & Workflow Foundation
+**Goal**: Build geometry computation and workflow orchestration libraries
+
+**Entry Criteria**: Phase 0 complete
+
+**Tasks**:
+- [ ] Implement Spatial Core - geometry utilities (depends on: [PostGIS, Type Definitions])
+  - Acceptance criteria: `parseCoordinates()`, `transformProjection()`, `validateGeometry()` working
+  - Test strategy: Unit tests with sample coordinate files, invalid geometries
+
+- [ ] Implement Spatial Core - coordinate geometry (COGO) (depends on: [Geometry utilities])
+  - Acceptance criteria: `computeClosure()` returns error within tolerance
+  - Test strategy: Traverse computation with known closed polygon, verify closure
+
+- [ ] Implement Spatial Core - topology validation (depends on: [Geometry utilities, PostGIS])
+  - Acceptance criteria: `detectOverlaps()`, `validateContainment()` flag spatial errors
+  - Test strategy: Test data with overlaps, gaps, invalid geometries
+
+- [ ] Implement Workflow Engine state machines (depends on: [Supabase Auth, Types])
+  - Acceptance criteria: State transitions execute with validation
+  - Test strategy: Test planning workflow: submitted → approved → locked
+
+- [ ] Create document template infrastructure (depends on: [Configuration])
+  - Acceptance criteria: PDF templates loaded, placeholders identified
+  - Test strategy: Render template with test data, verify output
+
+- [ ] Implement validation rules engine (depends on: [Type Definitions])
+  - Acceptance criteria: JSON schema validation, business rules enforce
+  - Test strategy: Test invalid scheme data rejected, valid accepted
+
+**Exit Criteria**:
+- Spatial operations (coordinate parsing, topology checks, area computation) working
+- State machines execute status transitions
+- Document templates render with data
+- Validation rules block invalid data
+
+**Delivers**: Core libraries that all modules will depend on
+
+---
+
+### Phase 2: Planning Module (Module 1)
+**Goal**: Enable planners to submit schemes and Planning Authority to approve
+
+**Entry Criteria**: Phase 1 complete (Spatial Core, Workflow Engine available)
+
+**Tasks**:
+- [ ] Create Planning database schema (depends on: [Foundation schema])
+  - Acceptance criteria: `apr.sectional_scheme_plans` table created with RBAC policies
+  - Test strategy: Insert test record, verify planner can create, planning authority can update
+
+- [ ] Implement scheme creation UI (depends on: [UI Primitives, Database schema])
+  - Acceptance criteria: Form accepts scheme metadata, uploads documents
+  - Test strategy: Create scheme, verify stored in database
+
+- [ ] Implement document upload to Supabase Storage (depends on: [Scheme creation])
+  - Acceptance criteria: PDFs/images stored with checksums, references saved
+  - Test strategy: Upload 10MB PDF, verify accessible via URL
+
+- [ ] Implement GIS visualization component (depends on: [Spatial Core])
+  - Acceptance criteria: Leaflet map displays parent land, proposed units, cadastral layer
+  - Test strategy: Load test scheme, verify layers render, measure tool works
+
+- [ ] Implement Planning Authority review workflow (depends on: [Workflow Engine, Scheme creation])
+  - Acceptance criteria: Authority can approve/reject, triggers state transition
+  - Test strategy: Approve scheme, verify status='approved', locked=true
+
+- [ ] Implement plan locking on approval (depends on: [Review workflow])
+  - Acceptance criteria: Approved plans become immutable, edits blocked
+  - Test strategy: Attempt to edit approved plan, verify error
+
+**Exit Criteria**:
+- Planners can create and submit schemes
+- Planning Authority can review and approve
+- Approved plans are locked and immutable
+- GIS viewer displays scheme spatially
+
+**Delivers**: End-to-end planning workflow from submission to approval
+
+---
+
+### Phase 3: Survey Module (Module 2)
+**Goal**: Enable surveyors to create geometry, compute areas, and SG to seal surveys
+
+**Entry Criteria**: Phase 2 complete (Approved planning schemes available)
+
+**Tasks**:
+- [ ] Create Survey database schema (depends on: [Planning schema])
+  - Acceptance criteria: `apr.survey_sectional_plans` table with FK to planning plans
+  - Test strategy: Insert survey linked to approved plan, verify constraint enforces approval
+
+- [ ] Implement parent parcel upload (depends on: [Spatial Core, Survey schema])
+  - Acceptance criteria: CSV/shapefile parsed, coordinates stored in PostGIS
+  - Test strategy: Upload coordinate file, verify geometry stored, displayed on map
+
+- [ ] Implement outside figure computation (depends on: [Spatial Core COGO])
+  - Acceptance criteria: Traverse computation returns area, closure error
+  - Test strategy: Test with known parcel, verify computed area matches expected
+
+- [ ] Implement sectional geometry generation (depends on: [Outside figure, Approved plan])
+  - Acceptance criteria: Unit polygons created from plan specifications
+  - Test strategy: Generate units, verify containment within parent, no overlaps
+
+- [ ] Implement participation quota calculation (depends on: [Sectional geometries])
+  - Acceptance criteria: Quotas sum to 100%, accurate to 4 decimals
+  - Test strategy: Test with 3 units of varying areas, verify quotas correct
+
+- [ ] Implement topology validation (depends on: [Spatial Core validation])
+  - Acceptance criteria: Overlaps, gaps, invalid geometries flagged with coordinates
+  - Test strategy: Introduce overlap, verify validation report identifies location
+
+- [ ] Implement scheme plan generation (depends on: [Document Templates, Survey geometries])
+  - Acceptance criteria: Multi-page PDF with section diagrams, schedules, notes
+  - Test strategy: Generate plan, verify all sections present, measurements correct
+
+- [ ] Implement SG review and sealing workflow (depends on: [Workflow Engine, Survey plan])
+  - Acceptance criteria: SG can approve/request corrections, seal applies hash
+  - Test strategy: Approve survey, verify status='sealed', hash stored
+
+**Exit Criteria**:
+- Surveyors can upload parent parcels and generate section geometries
+- System computes areas, quotas, detects topology errors
+- Scheme plans auto-generate conforming to standards
+- SG can review and seal surveys
+- Sealed surveys block further edits
+
+**Delivers**: Sealed spatial data ready for deeds registration
+
+---
+
+### Phase 4: Deeds Module (Modules 3 & 4)
+**Goal**: Register schemes and issue sectional title certificates
+
+**Entry Criteria**: Phase 3 complete (Sealed surveys available)
+
+**Tasks**:
+- [ ] Create Deeds database schema (depends on: [Survey schema])
+  - Acceptance criteria: `apr.sectional_schemes`, `apr.sections`, `apr.sectional_titles` tables created
+  - Test strategy: Insert scheme record, verify FK constraint to sealed survey
+
+- [ ] Implement scheme number allocation (depends on: [Deeds schema])
+  - Acceptance criteria: Unique scheme numbers generated per province/year
+  - Test strategy: Allocate 100 numbers concurrently, verify no duplicates
+
+- [ ] Implement Body Corporate registration (depends on: [Scheme registration])
+  - Acceptance criteria: Body Corporate record created, linked to scheme
+  - Test strategy: Register scheme, verify Body Corporate auto-created
+
+- [ ] Implement conveyancer deeds drafting UI (depends on: [Deeds schema, Sealed surveys])
+  - Acceptance criteria: Conveyancer can select scheme, draft unit descriptions
+  - Test strategy: Draft deeds for 3-unit scheme, verify data matches survey
+
+- [ ] Implement deeds examination workflow (depends on: [Workflow Engine, Drafting])
+  - Acceptance criteria: Examiner can review, flag defects, approve
+  - Test strategy: Submit deeds with defect, verify returned to conveyancer
+
+- [ ] Implement title registration (depends on: [Deeds examination])
+  - Acceptance criteria: Registrar registers title, status='registered', number allocated
+  - Test strategy: Register title, verify immutable record created
+
+- [ ] Implement certificate generation (depends on: [Document Templates, Title registration])
+  - Acceptance criteria: PDF certificate with QR code, hash, digital signatures
+  - Test strategy: Generate certificate, scan QR code, verify links to verification URL
+
+**Exit Criteria**:
+- Schemes can be registered with Body Corporate
+- Deeds can be drafted, examined, and registered
+- Certificates auto-generate with QR codes and hashes
+- Verification URL resolves to certificate details
+
+**Delivers**: End-to-end deeds workflow producing legally defensible certificates
+
+---
+
+### Phase 5: PKI Integration Module
+**Goal**: Integrate external PKI (EJBCA) for digital signatures
+
+**Entry Criteria**: Phase 1 complete (can run in parallel with Phases 2-4)
+
+**Tasks**:
+- [ ] Setup EJBCA client library (depends on: [Configuration, Error Handling])
+  - Acceptance criteria: API client can authenticate with EJBCA
+  - Test strategy: Test API connection, verify response
+
+- [ ] Implement document signing (depends on: [EJBCA client])
+  - Acceptance criteria: Send document hash, receive signature ID
+  - Test strategy: Sign test document, verify signature stored
+
+- [ ] Implement signature verification (depends on: [EJBCA client])
+  - Acceptance criteria: Validate signature against certificate chain
+  - Test strategy: Verify valid signature returns true, invalid returns false
+
+- [ ] Integrate signatures into Planning approval (depends on: [Planning Module, PKI])
+  - Acceptance criteria: Planning Authority approval applies digital signature
+  - Test strategy: Approve plan, verify signature ID stored, certificate retrievable
+
+- [ ] Integrate signatures into SG sealing (depends on: [Survey Module, PKI])
+  - Acceptance criteria: SG seal applies digital signature
+  - Test strategy: Seal survey, verify signature validates
+
+- [ ] Integrate signatures into Deeds registration (depends on: [Deeds Module, PKI])
+  - Acceptance criteria: Registrar signature applied on title registration
+  - Test strategy: Register title, verify signature present on certificate
+
+**Exit Criteria**:
+- Digital signatures applied at all approval points
+- Signatures validate against PKI certificate chain
+- Signature metadata (signer, role, timestamp) captured
+
+**Delivers**: Legally binding digital signatures across all workflows
+
+---
+
+### Phase 6: Operations Module (Module 5)
+**Goal**: Enable post-registration operations (transfers, mortgages, amendments)
+
+**Entry Criteria**: Phase 4 complete (Registered titles available)
+
+**Tasks**:
+- [ ] Create Operations database schema (depends on: [Deeds schema])
+  - Acceptance criteria: Transfer, mortgage, amendment tables with FKs to titles
+  - Test strategy: Insert transfer record, verify FK constraint to registered title
+
+- [ ] Implement ownership transfer workflow (depends on: [Workflow Engine, Operations schema])
+  - Acceptance criteria: Transfer recorded, new certificate issued, old version preserved
+  - Test strategy: Transfer title, verify new owner, old version immutable
+
+- [ ] Implement mortgage registration (depends on: [Operations schema])
+  - Acceptance criteria: Charge recorded, linked to title, lender notified
+  - Test strategy: Register mortgage, verify encumbrance appears on certificate
+
+- [ ] Implement lease registration (depends on: [Operations schema])
+  - Acceptance criteria: Lease recorded with term, expiry tracked
+  - Test strategy: Register 5-year lease, verify expiry date computed
+
+- [ ] Implement scheme amendment workflow (depends on: [Workflow Engine, Spatial Core])
+  - Acceptance criteria: Extension application triggers re-approval, quotas recomputed
+  - Test strategy: Submit amendment, verify routed for approval, geometry updated
+
+**Exit Criteria**:
+- Transfers, mortgages, leases can be registered
+- Amendments can be processed with geometry updates
+- History preserved through versioning
+
+**Delivers**: Full post-registration operations capability
+
+---
+
+### Phase 7: Admin Module (Module 6)
+**Goal**: User management, RBAC, digital signature setup
+
+**Entry Criteria**: Phase 5 complete (PKI available)
+
+**Tasks**:
+- [ ] Create Admin database schema (depends on: [Foundation schema])
+  - Acceptance criteria: User profiles, roles, permissions tables
+  - Test strategy: Insert user with role, verify permissions assigned
+
+- [ ] Implement user registration (depends on: [Admin schema, Supabase Auth])
+  - Acceptance criteria: Users register with credentials, pending approval
+  - Test strategy: Register planner, verify approval queue entry
+
+- [ ] Implement RBAC enforcement (depends on: [User registration, All modules])
+  - Acceptance criteria: Unauthorized actions blocked, logged
+  - Test strategy: Attempt surveyor editing planning data, verify denied
+
+- [ ] Implement digital signature setup for users (depends on: [PKI Integration])
+  - Acceptance criteria: Users link PKI certificates to profiles
+  - Test strategy: Setup signature, use to sign document, verify
+
+**Exit Criteria**:
+- Users can register with role-based access
+- RBAC enforced across all modules
+- Users can setup digital signatures
+
+**Delivers**: Complete user management and security system
+
+---
+
+### Phase 8: Analytics & Verification Module (Module 7)
+**Goal**: Reporting, spatial analysis, public verification
+
+**Entry Criteria**: Phase 4 complete (Data generating in all modules)
+
+**Tasks**:
+- [ ] Implement provincial performance dashboards (depends on: [All modules data])
+  - Acceptance criteria: Charts display schemes/month, provincial breakdown
+  - Test strategy: Generate test data, verify charts update
+
+- [ ] Implement spatial analytics (depends on: [Spatial Core, All modules data])
+  - Acceptance criteria: Heat maps, density analysis on GIS
+  - Test strategy: Execute spatial query, verify results render on map
+
+- [ ] Implement report export (depends on: [Analytics dashboards])
+  - Acceptance criteria: PDF/Excel/CSV reports downloadable
+  - Test strategy: Export report, verify data integrity
+
+- [ ] Implement certificate verification portal (depends on: [PKI Integration, Deeds Module])
+  - Acceptance criteria: Public can verify certificate by number or QR code
+  - Test strategy: Scan test certificate QR, verify details displayed
+
+- [ ] Implement audit trail access (depends on: [Records management])
+  - Acceptance criteria: Authorized users can view complete history
+  - Test strategy: Query scheme history, verify all actions logged with timestamps
+
+**Exit Criteria**:
+- Dashboards display real-time statistics
+- Spatial analytics functional
+- Public verification portal working
+- Audit trails accessible
+
+**Delivers**: Complete analytics and transparency capability
+
+---
+
+### Phase 9: Public Dashboard & Final Integration (Module 0)
+**Goal**: Public landing page and cross-module integration testing
+
+**Entry Criteria**: All previous phases complete
+
+**Tasks**:
+- [ ] Implement public landing page (depends on: [UI Primitives, Analytics])
+  - Acceptance criteria: Landing page displays national inscription, key stats
+  - Test strategy: Load page, verify statistics accurate
+
+- [ ] Implement public dashboard (depends on: [Analytics Module])
+  - Acceptance criteria: Read-only charts for deeds/month, plans/province
+  - Test strategy: Verify data matches internal dashboards
+
+- [ ] End-to-end integration testing (depends on: [All modules])
+  - Acceptance criteria: Complete workflow from planning to certificate issuance succeeds
+  - Test strategy: Execute full workflow, verify certificate issued
+
+- [ ] Performance testing (depends on: [All modules])
+  - Acceptance criteria: System handles 100 concurrent users, <2s response time
+  - Test strategy: Load test with realistic workflows
+
+- [ ] Security audit (depends on: [All modules, PKI])
+  - Acceptance criteria: No critical vulnerabilities, RBAC enforced
+  - Test strategy: Penetration testing, OWASP Top 10 checks
+
+**Exit Criteria**:
+- Public landing page live
+- End-to-end workflow succeeds
+- Performance meets SLA
+- Security audit passed
+
+**Delivers**: Production-ready APR system
+
+</implementation-roadmap>
+
+---
+
+<test-strategy>
+
+## Test Pyramid
+
+```
+        /\
+       /E2E\       ← 10% (End-to-end workflows, slow, comprehensive)
+      /------\
+     /Integration\ ← 30% (Module interactions, API calls, DB transactions)
+    /------------\
+   /  Unit Tests  \ ← 60% (Fast, isolated, deterministic)
+  /----------------\
+```
+
+## Coverage Requirements
+- Line coverage: 80% minimum
+- Branch coverage: 75% minimum
+- Function coverage: 85% minimum
+- Critical paths: 100% coverage (approval workflows, spatial computations, document generation)
+
+## Critical Test Scenarios
+
+### Spatial Core Module
+**Happy path**:
+- Valid coordinate file parses successfully, geometry stored in PostGIS
+- Expected: Coordinates returned as array, ST_IsValid returns true
+
+**Edge cases**:
+- Empty coordinate file, single coordinate, self-intersecting polygon
+- Expected: Validation errors returned with descriptive messages
+
+**Error cases**:
+- Invalid CSV format, missing columns, unparseable coordinates
+- Expected: Parse error thrown, no partial data committed
+
+**Integration points**:
+- Coordinate parsing → PostGIS storage → Geometry retrieval
+- Expected: Round-trip preserves coordinate precision
+
+### Planning Module
+**Happy path**:
+- Planner submits scheme, Planning Authority approves, plan locks
+- Expected: status='approved', locked=true, workflow advances to Survey
+
+**Edge cases**:
+- Scheme with 1 section, scheme with 100 sections
+- Expected: Both handled correctly, no performance degradation
+
+**Error cases**:
+- Missing required fields, invalid document formats, duplicate scheme names
+- Expected: Validation error before database commit
+
+**Integration points**:
+- Planning approval → Workflow Engine → Survey module notification
+- Expected: Survey module retrieves approved plan successfully
+
+### Survey Module
+**Happy path**:
+- Approved plan retrieved, geometries generated, topology valid, SG seals
+- Expected: status='sealed', hash stored, deeds module can proceed
+
+**Edge cases**:
+- Parent parcel exactly matches proposed sections (no residual land)
+- Expected: Quota computation succeeds, 100% allocation
+
+**Error cases**:
+- Overlapping sections, sections outside parent boundary
+- Expected: Topology validation flags errors with coordinates
+
+**Integration points**:
+- Survey sealing → Document generation → PDF scheme plan produced
+- Expected: Generated plan includes all sections, measurements match computed areas
+
+### Deeds Module
+**Happy path**:
+- Sealed survey retrieved, scheme registered, deeds examined, title registered, certificate issued
+- Expected: Certificate PDF with QR code, hash, valid signatures
+
+**Edge cases**:
+- Scheme with single unit, scheme with 50+ units
+- Expected: All certificates generated, no timeouts
+
+**Error cases**:
+- Attempt to register without sealed survey, missing conveyancer signature
+- Expected: Validation blocks registration, descriptive error returned
+
+**Integration points**:
+- Title registration → PKI signature → Certificate generation → Verification portal
+- Expected: End-to-end flow, QR code scan retrieves correct certificate
+
+### Workflow Engine
+**Happy path**:
+- State transition from 'submitted' → 'approved', authorized user
+- Expected: Status updated, timestamp recorded, next actor notified
+
+**Edge cases**:
+- Concurrent state transition attempts on same record
+- Expected: Database transaction isolation prevents conflicts
+
+**Error cases**:
+- Unauthorized user attempts state transition, invalid target state
+- Expected: RBAC blocks action, logged, error returned
+
+**Integration points**:
+- Workflow transition → Notification service → Email sent
+- Expected: Actor receives email within 5 minutes
+
+## Test Generation Guidelines
+
+- **Use realistic test data**: Actual coordinate files from Zimbabwe, real scheme names, valid communal land IDs
+- **Test RBAC at every endpoint**: Every API route must validate user role before execution
+- **Test spatial operations with PostGIS**: Use PostGIS functions directly in tests (ST_IsValid, ST_Overlaps)
+- **Test document generation**: Generate PDFs in tests, validate structure (not pixel-perfect comparison)
+- **Test workflow state machines**: Verify all valid transitions, reject invalid transitions
+- **Test concurrent operations**: Use tools like k6 or Artillery for load testing
+- **Test PKI integration**: Mock EJBCA API in unit tests, use test PKI in integration tests
+- **Test error scenarios**: Network failures, database timeouts, malformed input
+- **Test data versioning**: Verify immutability, version history preserved on amendments
+
+</test-strategy>
+
+---
+
+<architecture>
+
+## System Components
+
+### Frontend (Next.js App Router)
+- **Role**: User-facing application for all modules
+- **Technology**: Next.js 15+ with App Router, React Server Components
+- **Key patterns**: 
+  - Server Components for data fetching (reduces client bundle)
+  - Client Components for interactivity (maps, forms)
+  - Parallel routes for multi-view dashboards
+  - Route handlers for API endpoints
+
+### Backend (Supabase)
+- **Role**: Database, authentication, storage, real-time, serverless functions
+- **Technology**: PostgreSQL 15+ with PostGIS 3.4+, Supabase Auth (JWT), Supabase Storage (S3-compatible), Deno Edge Functions
+- **Key patterns**:
+  - Row-Level Security (RLS) for RBAC enforcement
+  - Database triggers for audit logging
+  - PostGIS for all spatial operations
+  - Edge Functions for workflow orchestration and computations
+
+### GIS Layer (PostGIS + Leaflet)
+- **Role**: Spatial data storage, queries, visualization
+- **Technology**: PostGIS (spatial database), Leaflet (map rendering)
+- **Key patterns**:
+  - Store all geometries in PostGIS with SRID 32735 (UTM Zone 35S - Zimbabwe)
+  - Use spatial indexes (GIST) on geometry columns
+  - Leaflet layers for cadastral parcels, schemes, sections
+
+### Document Generation (PDF)
+- **Role**: Generate certificates, scheme plans, reports
+- **Technology**: jsPDF or PDFKit, QR code library
+- **Key patterns**:
+  - Template-based generation
+  - QR codes link to verification URLs
+  - Document hash computed on generation
+
+### External Integrations
+- **PKI (EJBCA)**: Digital signature issuance and verification
+- **National ID System**: Owner/holder verification (future)
+- **Financial Institutions**: Mortgage registration notifications (future)
+
+## Data Models
+
+### Core Entities
+
+**apr.sectional_scheme_plans** (Planning Module)
+```sql
+plan_id UUID PRIMARY KEY
+scheme_name TEXT NOT NULL
+planner_id UUID REFERENCES auth.users
+planning_authority TEXT
+approval_status ENUM('submitted','approved','rejected')
+approval_date TIMESTAMP
+document_ids UUID[] REFERENCES storage.objects
+locked BOOLEAN DEFAULT false
+created_at TIMESTAMP DEFAULT now()
+```
+
+**apr.survey_sectional_plans** (Survey Module)
+```sql
+survey_id UUID PRIMARY KEY
+planning_plan_id UUID REFERENCES apr.sectional_scheme_plans
+status ENUM('submitted','checked','approved','sealed')
+approved_by UUID REFERENCES auth.users
+approval_date TIMESTAMP
+seal_hash TEXT
+parent_parcel GEOMETRY(Polygon, 32735)
+created_at TIMESTAMP DEFAULT now()
+```
+
+**apr.sectional_schemes** (Deeds Module)
+```sql
+scheme_id UUID PRIMARY KEY
+scheme_number TEXT UNIQUE NOT NULL
+communal_land_id TEXT
+body_corporate_id UUID REFERENCES apr.body_corporates
+survey_id UUID REFERENCES apr.survey_sectional_plans
+registration_date TIMESTAMP
+created_at TIMESTAMP DEFAULT now()
+```
+
+**apr.sections** (Deeds Module)
+```sql
+section_id UUID PRIMARY KEY
+scheme_id UUID REFERENCES apr.sectional_schemes
+section_number TEXT
+area NUMERIC(10, 2)  -- in m²
+participation_quota NUMERIC(5, 4)  -- e.g., 33.3333
+geometry GEOMETRY(Polygon, 32735)
+exclusive_use_areas GEOMETRY(MultiPolygon, 32735)
+created_at TIMESTAMP DEFAULT now()
+```
+
+**apr.sectional_titles** (Deeds Module)
+```sql
+title_id UUID PRIMARY KEY
+section_id UUID REFERENCES apr.sections
+title_number TEXT UNIQUE NOT NULL
+holder_id UUID
+holder_name TEXT
+registration_status ENUM('draft','registered','cancelled')
+registration_date TIMESTAMP
+digital_signature_id UUID
+certificate_url TEXT
+created_at TIMESTAMP DEFAULT now()
+```
+
+**apr.body_corporates** (Deeds Module)
+```sql
+body_corporate_id UUID PRIMARY KEY
+scheme_id UUID REFERENCES apr.sectional_schemes
+registration_date TIMESTAMP
+trustees JSONB  -- Array of trustee details
+created_at TIMESTAMP DEFAULT now()
+```
+
+**apr.digital_signatures** (Security)
+```sql
+signature_id UUID PRIMARY KEY
+document_id UUID
+signed_by UUID REFERENCES auth.users
+role TEXT
+pki_provider TEXT
+certificate_serial TEXT
+signed_at TIMESTAMP DEFAULT now()
+```
+
+**apr.record_registry** (Audit Trail)
+```sql
+record_id UUID PRIMARY KEY
+entity_type TEXT  -- 'scheme', 'survey', 'title'
+entity_id UUID
+version INTEGER
+hash TEXT
+status ENUM('active','superseded','revoked')
+created_at TIMESTAMP DEFAULT now()
+created_by UUID REFERENCES auth.users
+```
+
+## Technology Stack
+
+### Core Technologies
+- **Frontend**: Next.js 15+ (App Router), TypeScript, React 18+
+- **UI Library**: Tailwind CSS, Shadcn/UI components
+- **Maps**: Leaflet, react-leaflet
+- **Charts**: Recharts
+- **Backend**: Supabase (PostgreSQL 15+, PostGIS 3.4+)
+- **Auth**: Supabase Auth (JWT, RBAC)
+- **Storage**: Supabase Storage (S3-compatible)
+- **Serverless**: Supabase Edge Functions (Deno)
+- **PKI**: External EJBCA or equivalent
+
+### Key Design Decisions
+
+**Decision: Supabase over custom backend**
+- **Rationale**: 
+  - PostgreSQL with PostGIS meets all spatial requirements
+  - Built-in Auth, Storage, Real-time reduces development time
+  - Edge Functions provide serverless compute for workflows
+  - RLS provides row-level security enforcing RBAC
+- **Trade-offs**: Vendor lock-in, limited to PostgreSQL
+- **Alternatives considered**: Custom Node.js API + PostgreSQL, AWS Lambda + RDS
+
+**Decision: Next.js App Router over Pages Router**
+- **Rationale**: 
+  - Server Components reduce client bundle size
+  - Built-in streaming and suspense improve performance
+  - Native parallel routes support complex dashboards
+- **Trade-offs**: Newer paradigm, smaller ecosystem
+- **Alternatives considered**: Next.js Pages Router, Remix, SvelteKit
+
+**Decision: PostGIS for spatial operations**
+- **Rationale**: 
+  - Industry-standard spatial database
+  - Advanced topology validation functions
+  - Performant spatial indexes (GIST)
+  - Supports coordinate transformations
+- **Trade-offs**: Learning curve for SQL spatial queries
+- **Alternatives considered**: MongoDB with GeoJSON, Neo4j spatial
+
+**Decision: External PKI (EJBCA) over custom signing**
+- **Rationale**: 
+  - Legal defensibility requires established PKI
+  - Certificate chain validation requires CA infrastructure
+  - Avoid liability of managing signing keys
+- **Trade-offs**: External dependency, integration complexity
+- **Alternatives considered**: Custom signing with OpenSSL, AWS Certificate Manager
+
+**Decision: Monorepo over microservices**
+- **Rationale**: 
+  - All modules share database, auth, types
+  - Reduces deployment complexity
+  - Easier development with single codebase
+- **Trade-offs**: All modules deployed together
+- **Alternatives considered**: Microservices per module, separate repos
+
+</architecture>
+
+---
+
+<risks>
+
+## Technical Risks
+
+**Risk**: PostGIS spatial computation performance degrades with large schemes (100+ sections)
+- **Impact**: High - Delays in survey approval, user frustration
+- **Likelihood**: Medium
+- **Mitigation**: 
+  - Implement spatial indexes (GIST) on all geometry columns
+  - Cache computed geometries, recompute only on change
+  - Parallelize computation with Edge Functions
+- **Fallback**: Implement background job queue for complex computations
+
+**Risk**: PDF generation timeouts for large scheme plans (50+ pages)
+- **Impact**: Medium - Manual generation required, workflow delay
+- **Likelihood**: Medium
+- **Mitigation**: 
+  - Generate PDFs asynchronously via Edge Function
+  - Stream PDF generation to avoid memory limits
+  - Implement pagination for very large schemes
+- **Fallback**: Split large schemes into multiple PDFs
+
+**Risk**: PKI integration failure (EJBCA unavailable or certificate issues)
+- **Impact**: High - Cannot issue legally defensible certificates
+- **Likelihood**: Low
+- **Mitigation**: 
+  - Implement retry logic with exponential backoff
+  - Cache certificate validation results
+  - Support manual (wet) signatures as fallback
+- **Fallback**: Queue signing operations, process when PKI available
+
+**Risk**: Coordinate system transformation errors (datum mismatches)
+- **Impact**: High - Survey data spatially incorrect, legal disputes
+- **Likelihood**: Medium
+- **Mitigation**: 
+  - Validate datum on coordinate file upload
+  - Standardize all storage to UTM Zone 35S (SRID 32735)
+  - Display warnings for unusual transformations
+- **Fallback**: Manual review of all coordinate transformations by SG
+
+**Risk**: Database migration failure on production
+- **Impact**: High - System downtime, potential data loss
+- **Likelihood**: Low
+- **Mitigation**: 
+  - Test all migrations on staging with production-like data volume
+  - Implement rollback scripts for every migration
+  - Use transactional migrations (atomicity)
+- **Fallback**: Database point-in-time recovery, manual data restoration
+
+## Dependency Risks
+
+**Risk**: Supabase service outage or downtime
+- **Impact**: High - Entire system unavailable
+- **Likelihood**: Low
+- **Mitigation**: 
+  - Monitor Supabase status page, set up alerts
+  - Implement request retries with exponential backoff
+  - Cache critical read-only data in frontend
+- **Fallback**: Self-host PostgreSQL + PostGIS (requires infrastructure investment)
+
+**Risk**: External PKI (EJBCA) integration changes or becomes unavailable
+- **Impact**: High - Cannot issue new certificates with digital signatures
+- **Likelihood**: Medium
+- **Mitigation**: 
+  - Abstract PKI integration behind interface
+  - Support multiple PKI providers (EJBCA, AWS ACM, etc.)
+  - Document API contract, version API calls
+- **Fallback**: Defer to manual (wet) signatures, backfill digital signatures later
+
+**Risk**: Planning Authority delays approvals, creating workflow bottleneck
+- **Impact**: Medium - Schemes stuck in approval queue
+- **Likelihood**: High (organizational, not technical)
+- **Mitigation**: 
+  - Implement SLA tracking, escalation notifications
+  - Provide Planning Authority with dashboard of pending approvals
+  - Auto-reminder emails for overdue reviews
+- **Fallback**: Escalation workflow to senior authority
+
+## Scope Risks
+
+**Risk**: Scope creep - additional features requested during development (e.g., mobile app, SMS notifications)
+- **Impact**: Medium - Timeline delays, budget overruns
+- **Likelihood**: High
+- **Mitigation**: 
+  - Lock requirements after PRD approval
+  - Implement change request process with impact analysis
+  - Maintain backlog for post-launch features
+- **Fallback**: Time-box development, defer non-critical features to Phase 2
+
+**Risk**: Underestimation of workflow complexity (especially Survey computations)
+- **Impact**: High - Missed deadlines, incomplete features
+- **Likelihood**: Medium
+- **Mitigation**: 
+  - Allocate 20% buffer time for each phase
+  - Implement Survey module computations early (Phase 3)
+  - Involve domain experts (surveyors) in requirements validation
+- **Fallback**: Simplify initial release (manual computation fallback), enhance later
+
+**Risk**: Regulatory requirements change during development (new Acts or Regulations)
+- **Impact**: High - Rework of workflows, schema changes
+- **Likelihood**: Medium
+- **Mitigation**: 
+  - Monitor legislative changes, engage with regulatory bodies
+  - Design flexible workflow engine (state machines easily modified)
+  - Abstract business rules into configuration (not hardcoded)
+- **Fallback**: Rapid iteration cycle to accommodate regulatory changes
+
+**Risk**: User adoption resistance due to change from manual processes
+- **Impact**: High - System underutilized, manual processes persist
+- **Likelihood**: High (organizational change management)
+- **Mitigation**: 
+  - Provide comprehensive training for all user roles
+  - Implement phased rollout (pilot province first)
+  - Maintain manual fallback workflows during transition
+- **Fallback**: Hybrid model with manual + digital workflows coexisting
+
+</risks>
+
+---
+
+<appendix>
+
+## References
+
+- **South African Sectional Titles Act**: Source for participation quota formula
+- **Zimbabwe Deeds Registries Act**: Legal framework for deeds registration
+- **Zimbabwe Survey Act**: Requirements for cadastral surveys
+- **PostGIS Documentation**: https://postgis.net/documentation/
+- **Supabase Documentation**: https://supabase.com/docs
+- **Next.js Documentation**: https://nextjs.org/docs
+- **EJBCA Documentation**: https://doc.primekey.com/ejbca
+
+## Glossary
+
+- **APR**: Automated Property Registration
+- **Body Corporate**: Statutory entity governing a sectional scheme
+- **Cadastral Parcel**: Legally defined land parcel with boundaries
+- **COGO**: Coordinate Geometry - mathematical computations for land surveying
+- **Communal Land**: Land held under customary tenure, not individual freehold
+- **Outside Figure**: Boundary traverse of parent land parcel
+- **Participation Quota**: Unit's share of common property (percentage)
+- **PKI**: Public Key Infrastructure - system for digital certificates and signatures
+- **PostGIS**: Spatial database extension for PostgreSQL
+- **RBAC**: Role-Based Access Control
+- **Scheme**: Sectional title development (multiple units under single parent land)
+- **Section**: Individual unit within a sectional scheme
+- **SG**: Surveyor-General - statutory authority for cadastral surveys
+- **Topology**: Spatial relationships between geometries (adjacency, containment, overlap)
+- **Traverse**: Survey technique using angles and distances to determine coordinates
+
+## Open Questions
+
+1. **Certificate Template Customization**: How many certificate templates are required? Different templates per province or land type?
+2. **Multi-Language Support**: Which languages should the system support? (English, Shona, Ndebele?)
+3. **Mobile Access**: Is mobile-responsive web sufficient, or is native mobile app required?
+4. **Offline Capability**: Do field surveyors need offline data collection capability?
+5. **SMS Notifications**: Are SMS notifications required in addition to email?
+6. **Payment Integration**: Does the system need to handle fee payments for registrations?
+7. **Archive Scanning**: How should historical (pre-digital) schemes be migrated into APR?
+8. **Coordinate Precision**: What precision is required for coordinates? (millimeters, centimeters?)
+9. **Backup Strategy**: What is the required RPO/RTO? (Recovery Point Objective / Recovery Time Objective)
+10. **Disaster Recovery**: Is hot standby required, or is cold backup sufficient?
+
+</appendix>
+
+---
+
+<task-master-integration>
+
+# How Task Master Uses This PRD
+
+When you run `task-master parse-prd .taskmaster/docs/prd.txt`, the parser will:
+
+1. **Extract capabilities** → Main tasks
+   - Each `### Capability:` becomes a top-level task
+   - Example: "Public Information & Transparency" → Task 1
+
+2. **Extract features** → Subtasks
+   - Each `#### Feature:` becomes a subtask under its capability
+   - Example: "National Statistics Dashboard" → Task 1.1
+
+3. **Parse dependency chain** → Task dependencies
+   - Foundation Layer (Phase 0) → No dependencies
+   - Planning Module (Phase 2) → Depends on [Spatial Core, Workflow Engine]
+   - This ensures topological ordering
+
+4. **Order by phases** → Task priorities
+   - Phase 0 (Foundation) = Highest priority, no blockers
+   - Phase 9 (Public Dashboard) = Lower priority, many dependencies
+
+5. **Use test strategy** → Test generation context
+   - Critical test scenarios feed into test generation
+   - Coverage requirements guide test creation
+
+**Result**: A dependency-aware task graph with ~40-50 top-level tasks, executable in correct order.
+
+## Why This RPG Structure Matters
+
+**Traditional flat PRDs lead to:**
+- ❌ Unclear task dependencies (which modules first?)
+- ❌ Arbitrary task ordering (random implementation sequence)
+- ❌ Circular dependencies discovered late (Planning needs Survey, Survey needs Planning)
+- ❌ Poorly scoped tasks (too broad or too narrow)
+
+**This RPG-structured PRD provides:**
+- ✅ Explicit dependency chains (Foundation → Data Layer → Modules)
+- ✅ Topological execution order (Phase 0 before Phase 1, etc.)
+- ✅ Clear module boundaries (Planning distinct from Survey)
+- ✅ Validated task graph before implementation (no surprises)
+
+## Tips for Task Master Parsing
+
+1. **Complexity Analysis First**: Run `task-master analyze-complexity --research` after parsing to identify tasks needing breakdown
+2. **Expand Complex Tasks**: Use `task-master expand --id=<id> --research` on high-complexity tasks (Score 8-10)
+3. **Leverage Research**: Use `--research` flag for Phases 1-3 (Foundation, Spatial Core, Planning) - most critical
+4. **Progressive Refinement**: Don't expand all tasks upfront; expand when starting a phase
+5. **Update Dependencies**: If implementation deviates, use `task-master update --from=<id> --prompt="Changed approach..."`
+
+## Expected Task Generation
+
+**Top-Level Tasks** (~45-50 tasks):
+- Phase 0: 6 tasks (Infrastructure setup)
+- Phase 1: 6 tasks (Spatial Core, Workflow Engine, Validation)
+- Phase 2: 6 tasks (Planning Module)
+- Phase 3: 8 tasks (Survey Module - most complex)
+- Phase 4: 7 tasks (Deeds Module)
+- Phase 5: 6 tasks (PKI Integration)
+- Phase 6: 5 tasks (Operations Module)
+- Phase 7: 4 tasks (Admin Module)
+- Phase 8: 5 tasks (Analytics Module)
+- Phase 9: 3 tasks (Public Dashboard, Integration Testing)
+
+**Subtasks per Task**: Varies by complexity
+- Simple tasks (UI): 3-5 subtasks
+- Complex tasks (Spatial computations): 8-12 subtasks
+- Integration tasks (Workflows): 5-8 subtasks
+
+**Total Subtasks**: ~250-350 subtasks across all phases
+
+## Next Steps After Parsing
+
+1. Initialize Task Master (if not done): `task-master init`
+2. Parse this PRD: `task-master parse-prd .taskmaster/docs/prd.txt --research --num-tasks=50`
+3. Analyze complexity: `task-master analyze-complexity --research`
+4. Review report: `task-master complexity-report`
+5. Expand Phase 0 tasks: `task-master expand --id=1 --research` (repeat for tasks 1-6)
+6. Start development: `task-master next`
+
+</task-master-integration>
+
