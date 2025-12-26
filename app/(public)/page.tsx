@@ -25,7 +25,8 @@ const headerNavigation = [
 	{
 		label: "Reporting",
 		links: [
-			{ label: "Verification of Records", href: "/verify/certificate" },
+			{ label: "Analytics and Reporting", href: "/analytics/dashboard" },
+			{ label: "Public Dashboard", href: "/dashboard" },
 			{ label: "Property Search (Map Viewer Support)", href: "/property/search" },
 			{ label: "General Records Search", href: "/documents/search" },
 		],
@@ -38,12 +39,11 @@ const headerNavigation = [
 		],
 	},
 	{
-		label: "Administration",
+		label: "Security & PKI",
 		links: [
 			{ label: "User Access Management", href: "/admin/users" },
 			{ label: "Performance Dashboard", href: "/analytics/performance" },
-			{ label: "Analytics and Reporting", href: "/analytics/dashboard" },
-			{ label: "Public Dashboard", href: "/dashboard" },
+			{ label: "Job Queue Management", href: "/admin/jobs" },
 		],
 	},
 ];

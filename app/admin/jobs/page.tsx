@@ -1,5 +1,7 @@
 import JobEnqueue from "@/components/admin/JobEnqueue";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const revalidate = 0;
 
@@ -16,6 +18,14 @@ export default async function JobsPage() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Admin: Jobs</h1>
+        <div className="flex gap-2">
+          <Link href="/admin/security">
+            <Button variant="outline" size="sm">Security & PKI</Button>
+          </Link>
+          <Link href="/admin/monitoring">
+            <Button variant="outline" size="sm">Monitoring</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">

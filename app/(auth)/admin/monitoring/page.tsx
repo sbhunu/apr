@@ -32,6 +32,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import Link from 'next/link'
 
 interface SystemMetrics {
   timestamp: string
@@ -211,6 +212,14 @@ export default function MonitoringDashboardPage() {
           <p className="text-muted-foreground">System metrics and health monitoring</p>
         </div>
         <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <Link href="/admin/security">
+              <Button variant="outline" size="sm">Security & PKI</Button>
+            </Link>
+            <Link href="/admin/jobs">
+              <Button variant="outline" size="sm">Job Queue</Button>
+            </Link>
+          </div>
           <Badge variant="outline" className="text-xs">
             Last updated: {lastUpdated.toLocaleTimeString()}
           </Badge>

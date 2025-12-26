@@ -40,6 +40,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import Link from 'next/link'
 
 type AdminUser = {
   id: string
@@ -321,6 +322,14 @@ export default function AdminSecurityPage() {
           <div>
             <p className="text-sm uppercase tracking-[0.4em] text-slate-500">User Access & PKI</p>
             <h1 className="text-3xl font-bold text-slate-900">User Access, Security & Digital Signatures</h1>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/admin/monitoring">
+              <Button variant="outline" size="sm">Monitoring</Button>
+            </Link>
+            <Link href="/admin/jobs">
+              <Button variant="outline" size="sm">Job Queue</Button>
+            </Link>
           </div>
           <div className="flex flex-col gap-1 text-sm text-slate-500">
             <div className="flex items-center gap-2">

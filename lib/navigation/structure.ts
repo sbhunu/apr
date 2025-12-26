@@ -82,6 +82,11 @@ export const navigationCategories: NavigationCategory[] = [
         description: "Stay up-to-date with latest circulars and updates.",
         href: "/news",
       },
+      {
+        title: "Verify a Certificate",
+        description: "Verify the authenticity of a QR-coded title certificate.",
+        href: "/verify/certificate",
+      },
     ],
     cta: {
       label: "Explore Reporting Tools",
@@ -189,6 +194,30 @@ export const navigationCategories: NavigationCategory[] = [
         href: "/operations/amendments",
       },
       {
+        title: "Mortgage Registration",
+        description:
+          "Register charges and mortgages on sectional titles. Track encumbrances and financial institution links.",
+        href: "/operations/mortgages",
+      },
+      {
+        title: "Lease Management",
+        description:
+          "Register and manage leases on sectional titles. Track lease terms, expiry dates, and renewals.",
+        href: "/operations/leases",
+      },
+      {
+        title: "Objections Processing",
+        description:
+          "Submit and process objections to planning applications. Manage objection windows and hearings.",
+        href: "/operations/objections",
+      },
+      {
+        title: "Dispute Resolution",
+        description:
+          "Create and manage disputes related to property rights. Track dispute resolution workflows.",
+        href: "/operations/disputes",
+      },
+      {
         title: "Property Records Analysis",
         description:
           "Comprehensive analysis of all records related to a property across planning, survey, and deeds.",
@@ -238,9 +267,15 @@ export const navigationCategories: NavigationCategory[] = [
           "Review throughput, response times, and related analytics.",
         href: "/analytics/performance",
       },
+      {
+        title: "Job Queue Management",
+        description:
+          "Monitor and manage background jobs, queues, and processing tasks.",
+        href: "/admin/jobs",
+      },
     ],
     cta: {
-      label: "Visit Administration Space",
+      label: "Visit Security & PKI Space",
       href: "/navigation/administration",
     },
   },

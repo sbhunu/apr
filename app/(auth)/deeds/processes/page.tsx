@@ -24,6 +24,8 @@ import {
   ArrowLeftRight,
   Edit,
   Shield,
+  Gavel,
+  Calendar,
 } from 'lucide-react'
 
 const module3Steps = [
@@ -104,6 +106,30 @@ const module5Steps = [
       'Register charges and mortgages on sectional titles. Link to financial institutions and track encumbrances.',
     action: { label: 'Register Mortgage', href: '/operations/mortgages' },
     icon: Shield,
+  },
+  {
+    id: 'leases',
+    title: 'Lease Management',
+    description:
+      'Register and manage leases on sectional titles. Track lease terms, expiry dates, and handle renewals.',
+    action: { label: 'Manage Leases', href: '/operations/leases' },
+    icon: FileText,
+  },
+  {
+    id: 'objections',
+    title: 'Objections Processing',
+    description:
+      'Submit and process objections to planning applications. Manage objection windows and schedule hearings.',
+    action: { label: 'Process Objections', href: '/operations/objections' },
+    icon: Gavel,
+  },
+  {
+    id: 'disputes',
+    title: 'Dispute Resolution',
+    description:
+      'Create and manage disputes related to property rights. Track dispute resolution workflows and assignments.',
+    action: { label: 'Manage Disputes', href: '/operations/disputes' },
+    icon: Scale,
   },
 ]
 
