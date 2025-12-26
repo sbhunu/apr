@@ -18,8 +18,16 @@ const headerNavigation = [
 		label: "Property Processes",
 		links: [
 			{ label: "Planning Processes", href: "/planning" },
-			{ label: "Surveying Processes", href: "/survey/computations/upload" },
 			{ label: "Deeds Processes", href: "/deeds/registration" },
+		],
+	},
+	{
+		label: "Surveying",
+		links: [
+			{ label: "Survey Processes Hub", href: "/survey/processes" },
+			{ label: "Upload Parent Parcel", href: "/survey/computations/upload" },
+			{ label: "SG Review & Approval", href: "/survey/approval" },
+			{ label: "Property Analysis", href: "/property/analysis" },
 		],
 	},
 	{

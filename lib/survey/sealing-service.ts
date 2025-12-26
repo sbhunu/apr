@@ -212,6 +212,42 @@ export async function sealSurveyPlan(
         userId
       )
 
+      // Trigger workflow to Deeds module if sealed (as per Integrated Plan BPMN Line 666)
+      try {
+        const { triggerNextModule } = await import('@/lib/workflows/triggers')
+        const { data: surveyPlanData } = await supabase
+          .from('survey_sectional_plans')
+          .select('planning_plan_id, survey_number')
+          .eq('id', surveyPlanId)
+          .single()
+
+        await triggerNextModule({
+          fromModule: 'survey',
+          toModule: 'deeds',
+          entityId: surveyPlanId,
+          entityType: 'survey_plan',
+          triggerType: 'survey_sealed',
+          triggeredBy: userId,
+          metadata: {
+            surveyId: surveyPlanId,
+            surveyNumber: surveyPlanData?.survey_number,
+            planId: surveyPlanData?.planning_plan_id,
+            sealHash,
+            sealedAt,
+          },
+        })
+
+        logger.info('Workflow triggered: Survey → Deeds', {
+          surveyPlanId,
+          userId,
+        })
+      } catch (triggerError) {
+        logger.error('Failed to trigger Deeds module workflow', triggerError as Error, {
+          surveyPlanId,
+        })
+        // Don't fail the sealing if trigger fails - log and continue
+      }
+
       logger.info('Survey plan sealed successfully', {
         surveyPlanId,
         sealHash,

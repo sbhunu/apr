@@ -319,6 +319,37 @@ export async function registerSectionalScheme(
         bodyCorporateId: bodyCorporateResult.bodyCorporateId,
       })
 
+      // Trigger workflow to Title Creation module if scheme registered (as per Integrated Plan BPMN Line 712)
+      try {
+        const { triggerNextModule } = await import('@/lib/workflows/triggers')
+        await triggerNextModule({
+          fromModule: 'scheme_registration',
+          toModule: 'title_creation',
+          entityId: scheme.id,
+          entityType: 'sectional_scheme',
+          triggerType: 'scheme_registered',
+          triggeredBy: user.id,
+          metadata: {
+            schemeId: scheme.id,
+            schemeNumber: allocation.scheme_number,
+            schemeName: registrationData.schemeName,
+            surveyPlanId: registrationData.surveyPlanId,
+            bodyCorporateId: bodyCorporateResult.bodyCorporateId,
+            registrationDate: registrationDate,
+          },
+        })
+
+        logger.info('Workflow triggered: Scheme Registration → Title Creation', {
+          schemeId: scheme.id,
+          userId: user.id,
+        })
+      } catch (triggerError) {
+        logger.error('Failed to trigger Title Creation workflow', triggerError as Error, {
+          schemeId: scheme.id,
+        })
+        // Don't fail the registration if trigger fails - log and continue
+      }
+
       return {
         success: true,
         schemeId: scheme.id,

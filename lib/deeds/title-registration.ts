@@ -343,6 +343,39 @@ export async function registerTitle(
         })
       }
 
+      // Trigger workflow to Operations module if title registered (as per Integrated Plan BPMN)
+      try {
+        const { triggerNextModule } = await import('@/lib/workflows/triggers')
+        await triggerNextModule({
+          fromModule: 'deeds',
+          toModule: 'operations',
+          entityId: titleId,
+          entityType: 'sectional_title',
+          triggerType: 'title_registered',
+          triggeredBy: userId,
+          metadata: {
+            titleId,
+            titleNumber: allocation.titleNumber,
+            registrationNumber,
+            registrationDate: registrationDate.toISOString(),
+            sectionId: title.section_id,
+            sectionNumber: (title.sections as any)?.section_number,
+            schemeNumber: (title.sections as any)?.sectional_schemes?.scheme_number,
+            schemeName: (title.sections as any)?.sectional_schemes?.scheme_name,
+          },
+        })
+
+        logger.info('Workflow triggered: Title Registration → Operations', {
+          titleId,
+          userId,
+        })
+      } catch (triggerError) {
+        logger.error('Failed to trigger Operations workflow', triggerError as Error, {
+          titleId,
+        })
+        // Don't fail the registration if trigger fails - log and continue
+      }
+
       return {
         success: true,
         titleId,

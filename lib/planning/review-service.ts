@@ -257,6 +257,7 @@ export async function submitReview(
         updateData.approved_at = new Date().toISOString()
         updateData.approved_by = reviewerId
         updateData.approval_number = `APPROVAL-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`
+        updateData.locked = true // Lock plan on approval as per Integrated Plan
       } else if (data.decision === 'rejected') {
         updateData.rejected_at = new Date().toISOString()
         updateData.rejected_by = reviewerId
@@ -329,6 +330,43 @@ export async function submitReview(
             planId: data.planId,
           })
           // Continue without signature - don't fail the approval
+        }
+      }
+
+      // Trigger workflow to Survey module if approved (as per Integrated Plan BPMN Line 621)
+      if (data.decision === 'approved') {
+        try {
+          const { triggerNextModule } = await import('@/lib/workflows/triggers')
+          const { data: plan } = await supabase
+            .from('sectional_scheme_plans')
+            .select('scheme_name')
+            .eq('id', data.planId)
+            .single()
+
+          await triggerNextModule({
+            fromModule: 'planning',
+            toModule: 'survey',
+            entityId: data.planId,
+            entityType: 'planning_plan',
+            triggerType: 'planning_approved',
+            triggeredBy: reviewerId,
+            metadata: {
+              planId: data.planId,
+              schemeName: plan?.scheme_name,
+              approvalNumber: updateData.approval_number,
+              approvedAt: updateData.approved_at,
+            },
+          })
+
+          logger.info('Workflow triggered: Planning → Survey', {
+            planId: data.planId,
+            reviewerId,
+          })
+        } catch (triggerError) {
+          logger.error('Failed to trigger Survey module workflow', triggerError as Error, {
+            planId: data.planId,
+          })
+          // Don't fail the approval if trigger fails - log and continue
         }
       }
 

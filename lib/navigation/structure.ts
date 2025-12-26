@@ -9,12 +9,17 @@ import {
   Shield,
   TrendingUp,
   Users,
+  Compass,
+  Calculator,
+  Layers,
+  FileCheck,
 } from "lucide-react";
 
 export type NavigationCategorySlug =
   | "reporting"
   | "verifications"
   | "property-processes"
+  | "surveying"
   | "administration";
 
 export interface NavigationSubItem {
@@ -223,15 +228,74 @@ export const navigationCategories: NavigationCategory[] = [
           "Comprehensive analysis of all records related to a property across planning, survey, and deeds.",
         href: "/property/analysis",
       },
-      {
-        title: "Surveying Processes",
-        description: "Overview of Module 2 flows and approvals.",
-        href: "/survey/processes",
-      },
     ],
     cta: {
       label: "Explore Property Workflows",
       href: "/navigation/property-processes",
+    },
+  },
+  {
+    slug: "surveying",
+    label: "Surveying",
+    description:
+      "Survey computation, spatial validation, and Surveyor-General approval workflows.",
+    hero: "Complete Module 2 workflow: from approved planning plans to sealed surveys ready for deeds registration.",
+    highlight:
+      "Upload parent parcels, compute geometries, validate topology, generate scheme plans, and obtain SG approval.",
+    icon: Compass,
+    subItems: [
+      {
+        title: "Survey Processes Hub",
+        description:
+          "Overview of Module 2: Survey Computation & Spatial Verification workflow.",
+        href: "/survey/processes",
+      },
+      {
+        title: "Retrieve Approved Planning Plans",
+        description:
+          "Browse approved sectional schemes, preview metadata, access planning documents, and select plans for survey processing.",
+        href: "/planning/review",
+      },
+      {
+        title: "Upload Parent Parcel & Control",
+        description:
+          "Upload parent communal land geometry, boundary coordinates, control points, datum, cadastral framework, and GNSS/conventional survey metadata.",
+        href: "/survey/computations/upload",
+      },
+      {
+        title: "Compute Outside Figure",
+        description:
+          "Automated and manual computation: validate closure & accuracy, compute outside figure and land area consistency, check overlaps with adjacent communal lands and public servitudes.",
+        href: "/survey/computations/upload",
+      },
+      {
+        title: "Generate Sectional Geometries",
+        description:
+          "For each unit: compute unit areas (m²), boundary dimensions, common areas, participation quotas. Validate no overlaps and full containment within building footprint.",
+        href: "/survey/computations/upload",
+      },
+      {
+        title: "Automated Scheme Plan Generation",
+        description:
+          "Generate sectional title scheme plans: sheets, legends, notes, section diagrams, area schedules, and participation quota tables from stored templates.",
+        href: "/survey/computations/upload",
+      },
+      {
+        title: "Surveyor-General Review & Approval",
+        description:
+          "SG review with digital markup & corrections, compliance checklist (Act & Regulations), digital signature, and approval certificate issuance.",
+        href: "/survey/approval",
+      },
+      {
+        title: "Property Records Analysis",
+        description:
+          "GIS viewer, documents viewer (PDF/image), and comprehensive analysis of all records relating to a property. Send correction emails to planning scheme and land surveyor.",
+        href: "/property/analysis",
+      },
+    ],
+    cta: {
+      label: "Start Survey Workflow",
+      href: "/survey/processes",
     },
   },
   {
@@ -260,6 +324,12 @@ export const navigationCategories: NavigationCategory[] = [
         title: "Security Monitoring",
         description: "View uptime, alerts, and infrastructure health.",
         href: "/admin/monitoring",
+      },
+      {
+        title: "Workflow Events Monitor",
+        description:
+          "Monitor workflow triggers and handoffs between modules. Track Planning → Survey → Deeds → Operations workflow.",
+        href: "/admin/workflows",
       },
       {
         title: "Performance Dashboard",

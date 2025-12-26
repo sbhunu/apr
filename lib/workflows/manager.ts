@@ -312,20 +312,90 @@ export class WorkflowManager {
   }
 
   /**
-   * Send notification for workflow transition (placeholder)
+   * Send notification for workflow transition
+   * Now triggers actual workflow events to next modules
    */
   private async sendNotification(
     workflowType: 'planning' | 'survey' | 'deed' | 'title',
     entityId: string,
     transition: StateTransition<string>
   ): Promise<void> {
-    // Placeholder for notification service integration
-    // Would integrate with email, SMS, or in-app notification service
-    logger.debug('Workflow notification sent', {
-      workflowType,
-      entityId,
-      transition: transition.to,
-    })
+    try {
+      // Import trigger service dynamically to avoid circular dependencies
+      const { triggerNextModule } = await import('./triggers')
+
+      // Determine trigger type based on workflow type and transition
+      let triggerType: 'planning_approved' | 'survey_sealed' | 'scheme_registered' | 'title_registered' | null = null
+      let toModule: string | null = null
+
+      if (workflowType === 'planning' && transition.to === 'approved') {
+        triggerType = 'planning_approved'
+        toModule = 'survey'
+      } else if (workflowType === 'survey' && transition.to === 'sealed') {
+        triggerType = 'survey_sealed'
+        toModule = 'deeds'
+      } else if (workflowType === 'deed' && transition.to === 'registered') {
+        // This could be scheme or title - check entity type from context
+        // For now, we'll let the specific handlers call triggers directly
+        // This method is called from workflow manager which doesn't have full context
+        logger.debug('Workflow transition notification (deed registered)', {
+          workflowType,
+          entityId,
+          transition: transition.to,
+        })
+        return
+      }
+
+      // Trigger next module if applicable
+      if (triggerType && toModule) {
+        await triggerNextModule({
+          fromModule: workflowType,
+          toModule,
+          entityId,
+          entityType: this.getEntityType(workflowType),
+          triggerType,
+          triggeredBy: transition.userId,
+          metadata: {
+            fromState: transition.from,
+            toState: transition.to,
+            reason: transition.reason,
+            timestamp: transition.timestamp,
+          },
+        })
+      } else {
+        // Log other transitions for audit
+        logger.debug('Workflow transition notification', {
+          workflowType,
+          entityId,
+          transition: transition.to,
+        })
+      }
+    } catch (error) {
+      logger.error('Failed to send workflow notification', error as Error, {
+        workflowType,
+        entityId,
+        transition: transition.to,
+      })
+      // Don't throw - notification failure shouldn't break workflow
+    }
+  }
+
+  /**
+   * Get entity type string from workflow type
+   */
+  private getEntityType(workflowType: string): string {
+    switch (workflowType) {
+      case 'planning':
+        return 'planning_plan'
+      case 'survey':
+        return 'survey_plan'
+      case 'deed':
+        return 'sectional_title'
+      case 'title':
+        return 'sectional_title'
+      default:
+        return 'unknown'
+    }
   }
 }
 
