@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+description: Guidelines for using Tailwind CSS in projects
+globs: **/*.{ts,tsx,css}
+---
+
+- Use utility-first classes to build components quickly and efficiently.
+- Create custom themes and extend Tailwind's configuration for consistent styling.
+- Utilize responsive design features to ensure your UI works on all devices.
+- Avoid using arbitrary values in class names; prefer using Tailwind's spacing and sizing scale.

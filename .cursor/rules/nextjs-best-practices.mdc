@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+description: Best practices for Next.js applications and routing
+globs: **/*.{ts,tsx}
+---
+
+- Use the App Router for better performance and organization of routes.
+- Implement proper error boundaries to handle errors gracefully.
+- Utilize Next.js's built-in image optimization features for faster loading times.
+- Prefer static generation (SSG) over server-side rendering (SSR) when possible for improved performance.
+

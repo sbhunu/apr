@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+description: Best practices for spatial data management with PostGIS  
+globs: **/*.{sql}  
+---  
+
+- Use spatial indexes (GIST) on geometry columns for faster queries.
+- Validate geometries using PostGIS functions (e.g., ST_IsValid) before storing.
+- Regularly analyze and vacuum your spatial tables to maintain performance.
+- Use appropriate SRIDs for your spatial data to ensure accuracy in calculations.

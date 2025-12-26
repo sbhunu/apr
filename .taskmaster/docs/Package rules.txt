@@ -1,0 +1,61 @@
+ You need to adapt the globs depending on the project. Here are the best practices for each major library/framework found in your dependencies:
+
+---
+name: nextjs-best-practices.mdc
+description: Best practices for Next.js applications and routing
+globs: **/*.{ts,tsx}
+---
+
+- Use the App Router for better performance and organization of routes.
+- Implement proper error boundaries to handle errors gracefully.
+- Utilize Next.js's built-in image optimization features for faster loading times.
+- Prefer static generation (SSG) over server-side rendering (SSR) when possible for improved performance.
+
+---
+name: react-best-practices.mdc
+description: Best practices for React development
+globs: **/*.{ts,tsx,js,jsx}
+---
+
+- Use functional components and hooks for cleaner and more maintainable code.
+- Implement memoization (React.memo, useMemo, useCallback) to optimize performance.
+- Manage state effectively using Context API or state management libraries like Redux.
+- Ensure components are reusable and follow the single responsibility principle.
+
+---
+name: tailwindcss-best-practices.mdc
+description: Guidelines for using Tailwind CSS in projects
+globs: **/*.{ts,tsx,css}
+---
+
+- Use utility-first classes to build components quickly and efficiently.
+- Create custom themes and extend Tailwind's configuration for consistent styling.
+- Utilize responsive design features to ensure your UI works on all devices.
+- Avoid using arbitrary values in class names; prefer using Tailwind's spacing and sizing scale.
+
+---
+name: typescript-best-practices.mdc 
+description: TypeScript coding standards and type safety guidelines
+globs: **/*.{ts,tsx}
+---
+
+- Use strict null checks to avoid runtime errors and improve type safety.
+- Prefer interface over type for defining object shapes and contracts.
+- Use type guards and assertions to ensure type safety in complex scenarios.
+- Implement proper type inference to reduce redundancy and improve code clarity.
+
+---
+name: eslint-best-practices.mdc
+description: Best practices for ESLint configuration and usage
+globs: **/*.{ts,tsx,js,jsx}
+---
+
+- Use the recommended ESLint configuration for Next.js to ensure best practices.
+- Regularly run linting as part of your development workflow to catch issues early.
+- Customize rules to fit your team's coding standards while maintaining consistency.
+- Integrate ESLint with your editor for real-time feedback on code quality.
+
+Copy
+
+Share
+

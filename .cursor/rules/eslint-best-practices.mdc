@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+description: Best practices for ESLint configuration and usage
+globs: **/*.{ts,tsx,js,jsx}
+---
+
+- Use the recommended ESLint configuration for Next.js to ensure best practices.
+- Regularly run linting as part of your development workflow to catch issues early.
+- Customize rules to fit your team's coding standards while maintaining consistency.
+- Integrate ESLint with your editor for real-time feedback on code quality.

@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+description: Best practices for React development
+globs: **/*.{ts,tsx,js,jsx}
+---
+
+- Use functional components and hooks for cleaner and more maintainable code.
+- Implement memoization (React.memo, useMemo, useCallback) to optimize performance.
+- Manage state effectively using Context API or state management libraries like Redux.
+- Ensure components are reusable and follow the single responsibility principle.

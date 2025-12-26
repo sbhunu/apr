@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+description: Best practices for data fetching with React Query  
+globs: **/*.{ts,tsx}  
+---  
+
+- Use query keys to uniquely identify queries and manage cache effectively.
+- Implement background refetching to keep data fresh without user intervention.
+- Use mutation hooks for creating, updating, and deleting data with optimistic updates.
+- Leverage the devtools for debugging and monitoring query states.

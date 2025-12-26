@@ -1,0 +1,734 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Initialize Next.js Project with App Router and TypeScript",
+        "description": "Set up the foundational Next.js application with App Router, TypeScript, Tailwind CSS, and essential development tools",
+        "details": "Initialize Next.js 15+ project using `npx create-next-app@latest apr-system --typescript --tailwind --eslint --app --src-dir --import-alias '@/*'`. Configure TypeScript with strict mode, set up ESLint with Next.js rules, configure Tailwind CSS with custom theme colors for government branding. Install additional dependencies: @types/node, @types/react, @types/react-dom. Set up folder structure following the PRD repository structure with app/(public) and app/(auth) route groups.",
+        "testStrategy": "Verify `npm run dev` serves homepage at http://localhost:3000, TypeScript compilation succeeds with no errors, Tailwind CSS classes render correctly, ESLint runs without violations",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T13:58:39.464Z"
+      },
+      {
+        "id": "2",
+        "title": "Setup Supabase Project with PostGIS Extension",
+        "description": "Create Supabase project, enable PostGIS extension, and establish database connection",
+        "details": "Create new Supabase project via dashboard, enable PostGIS extension through SQL editor: `CREATE EXTENSION IF NOT EXISTS postgis;`. Install Supabase CLI and JavaScript client: `npm install @supabase/supabase-js @supabase/ssr`. Configure environment variables for SUPABASE_URL and SUPABASE_ANON_KEY. Create lib/supabase/client.ts and lib/supabase/server.ts following Supabase SSR patterns for Next.js App Router. Test PostGIS functionality with `SELECT PostGIS_Version();`",
+        "testStrategy": "Execute `SELECT PostGIS_Version()` via Supabase SQL editor returns version info, JavaScript client connects successfully, server-side client works in API routes",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T14:00:41.615Z"
+      },
+      {
+        "id": "3",
+        "title": "Create Database Migration Foundation",
+        "description": "Establish database schema foundation with core tables and RBAC policies",
+        "details": "Create supabase/migrations/001_foundation.sql with core schemas: `CREATE SCHEMA apr;`, `CREATE SCHEMA records;`. Set up auth.users extensions table for user profiles. Create initial tables: apr.user_profiles, apr.roles, apr.permissions with proper foreign keys. Implement Row Level Security (RLS) policies for RBAC enforcement. Use Supabase CLI: `supabase db reset` to apply migrations. Configure spatial reference system SRID 32735 (UTM Zone 35S for Zimbabwe).",
+        "testStrategy": "Run migrations successfully, verify schemas exist in database, RLS policies prevent unauthorized access, spatial reference system 32735 available",
+        "priority": "high",
+        "dependencies": [
+          "2"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T14:33:20.724Z"
+      },
+      {
+        "id": "4",
+        "title": "Install and Configure Shadcn/UI Components",
+        "description": "Set up Shadcn/UI component library with essential primitives for the application",
+        "details": "Initialize Shadcn/UI: `npx shadcn-ui@latest init` with default configuration. Install essential components: `npx shadcn-ui@latest add button form input label table dialog card badge alert`. Configure components.json with custom theme colors matching government branding. Create components/ui directory structure. Set up Tailwind CSS configuration for Shadcn/UI variables. Install additional UI dependencies: lucide-react for icons, class-variance-authority for component variants.",
+        "testStrategy": "Render test page with Button, Form, Table, Dialog components, verify styling matches design system, no console errors, components respond to interactions",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T14:35:30.239Z"
+      },
+      {
+        "id": "5",
+        "title": "Generate TypeScript Types from Supabase Schema",
+        "description": "Auto-generate TypeScript types from database schema for type safety",
+        "details": "Install Supabase CLI and configure local development: `supabase login`, `supabase init`. Generate types: `supabase gen types typescript --local > types/database.ts`. Create additional type definitions in types/spatial.ts for GIS data structures (Point, Polygon, MultiPolygon with SRID). Create types/workflows.ts for state machine definitions. Set up automatic type regeneration in package.json scripts. Configure TypeScript paths in tsconfig.json for clean imports.",
+        "testStrategy": "Import types in code without TypeScript errors, database operations are fully typed, spatial types match PostGIS geometry types, workflow types enforce valid state transitions",
+        "priority": "high",
+        "dependencies": [
+          "3"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T14:45:53.543Z"
+      },
+      {
+        "id": "6",
+        "title": "Create Global Error Handling and Logging Infrastructure",
+        "description": "Implement comprehensive error handling, logging, and monitoring system",
+        "details": "Create app/global-error.tsx for global error boundary using React Error Boundary pattern. Set up lib/logger.ts using console for development and structured logging for production. Implement error classification (user errors, system errors, validation errors). Create lib/monitoring.ts for performance tracking. Set up error reporting with proper sanitization of sensitive data. Implement retry logic for transient failures. Create custom error classes for different error types (ValidationError, AuthorizationError, etc.).",
+        "testStrategy": "Trigger intentional error, verify error boundary catches and displays user-friendly message, errors logged with proper context, no sensitive data in logs, retry logic works for network failures",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T14:50:36.103Z"
+      },
+      {
+        "id": "7",
+        "title": "Implement Spatial Core Geometry Utilities",
+        "description": "Build core spatial operations library for coordinate parsing, validation, and transformations",
+        "details": "Create lib/spatial/geometry.ts with functions: parseCoordinates() for CSV/shapefile parsing, transformProjection() for coordinate system conversion to SRID 32735, validateGeometry() wrapping PostGIS ST_IsValid. Install spatial dependencies: proj4 for coordinate transformations, wellknown for WKT parsing. Implement coordinate precision handling (4 decimal places for UTM). Create geometry type guards and validation functions. Handle common coordinate formats (decimal degrees, DMS, UTM).",
+        "testStrategy": "Parse valid coordinate file returns geometry array, invalid coordinates throw descriptive errors, coordinate transformation preserves accuracy, PostGIS validation integration works correctly",
+        "priority": "high",
+        "dependencies": [
+          "2",
+          "5"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T14:56:22.762Z"
+      },
+      {
+        "id": "8",
+        "title": "Implement Coordinate Geometry (COGO) Computations",
+        "description": "Build surveying computation library for traverse calculations, closure analysis, and area computation",
+        "details": "Create lib/spatial/cogo.ts with surveying functions: computeClosure() for traverse closure error calculation, computeArea() using shoelace formula, bearingDistance() for coordinate geometry. Implement least squares adjustment for coordinate refinement. Handle angular units (degrees, gradians, radians) and distance units (meters, feet). Create accuracy assessment functions meeting 1:10,000 tolerance requirements. Implement coordinate transformation between local and UTM systems.",
+        "testStrategy": "Traverse computation with known closed polygon returns closure error within tolerance, area calculation matches expected values, bearing/distance calculations are accurate to surveying standards",
+        "priority": "high",
+        "dependencies": [
+          "7"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:06:14.462Z"
+      },
+      {
+        "id": "9",
+        "title": "Implement Spatial Topology Validation",
+        "description": "Build topology validation system to detect spatial errors in sectional schemes",
+        "details": "Create lib/spatial/validation.ts with topology functions: detectOverlaps() using PostGIS ST_Overlaps, validateContainment() ensuring sections within parent parcel, checkGaps() for missing areas. Implement spatial indexing for performance with large schemes. Create validation report generation with error coordinates and descriptions. Handle edge cases like touching boundaries vs overlaps. Integrate with PostGIS topology functions (ST_IsValid, ST_Union, ST_Difference).",
+        "testStrategy": "Overlapping geometries flagged with coordinates, gaps detected and reported, containment validation works correctly, performance acceptable with 100+ sections",
+        "priority": "high",
+        "dependencies": [
+          "7"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:08:22.748Z"
+      },
+      {
+        "id": "10",
+        "title": "Implement Workflow Engine State Machines",
+        "description": "Build workflow orchestration system for managing approval processes across modules",
+        "details": "Create lib/workflows/ with state machine implementations using XState or custom state machine. Define planning-workflow.ts (submitted → approved → locked), survey-workflow.ts (submitted → sealed), deeds-workflow.ts (draft → registered). Implement state transition validation, role-based authorization for transitions, and automatic notifications. Create workflow persistence in database with audit trail. Handle concurrent state changes with optimistic locking.",
+        "testStrategy": "State transitions execute with proper validation, unauthorized transitions blocked and logged, workflow history preserved, concurrent updates handled correctly",
+        "priority": "high",
+        "dependencies": [
+          "3",
+          "5"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:14:51.159Z"
+      },
+      {
+        "id": "11",
+        "title": "Create Document Template Infrastructure",
+        "description": "Set up PDF template system for certificates, scheme plans, and reports",
+        "details": "Create lib/documents/templates/ directory structure. Install PDF generation libraries: jsPDF or @react-pdf/renderer for complex layouts. Create template base classes with placeholder replacement system. Design certificate template with QR code positioning, signature blocks, and government branding. Create scheme plan template with title blocks, legend, and scale indicators. Implement template versioning and selection system.",
+        "testStrategy": "Templates load without errors, placeholder replacement works correctly, generated PDFs have proper formatting and branding, QR codes render and scan correctly",
+        "priority": "medium",
+        "dependencies": [
+          "4"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:24:45.801Z"
+      },
+      {
+        "id": "12",
+        "title": "Implement Business Rules Validation Engine",
+        "description": "Create comprehensive validation system for business rules and data integrity",
+        "details": "Create lib/validation/ with schema-validators.ts using Zod for runtime validation, business-rules.ts for domain-specific rules. Implement validation for scheme naming conventions, area calculations, quota percentages, and legal descriptions. Create validation middleware for API routes. Implement cross-field validation (e.g., quotas sum to 100%). Handle validation error aggregation and user-friendly error messages.",
+        "testStrategy": "Invalid data rejected with descriptive errors, valid data passes validation, cross-field validation works correctly, validation errors properly formatted for UI display",
+        "priority": "medium",
+        "dependencies": [
+          "5"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:26:44.897Z"
+      },
+      {
+        "id": "13",
+        "title": "Create Planning Database Schema",
+        "description": "Implement database tables and policies for planning module functionality",
+        "details": "Create supabase/migrations/002_planning.sql with tables: apr.sectional_scheme_plans, apr.plan_documents, apr.planning_reviews. Implement foreign keys to auth.users for planners and planning authority. Set up RLS policies restricting planners to their own submissions, planning authority to review access. Create indexes on frequently queried columns (status, created_at, planner_id). Implement audit triggers for change tracking.",
+        "testStrategy": "Tables created successfully, RLS policies enforce access control, planners can create/edit own schemes, planning authority can review all schemes, audit trail captures changes",
+        "priority": "high",
+        "dependencies": [
+          "3"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:10:43.297Z"
+      },
+      {
+        "id": "14",
+        "title": "Implement Scheme Creation User Interface",
+        "description": "Build form interface for planners to create new sectional scheme applications",
+        "details": "Create app/(auth)/planning/schemes/new/page.tsx with multi-step form using Shadcn/UI Form components. Implement form validation with Zod schemas, file upload handling for planning documents, and progress indicators. Create reusable form components for scheme metadata (name, location, number of sections). Implement draft saving functionality and form state persistence. Add client-side validation with server-side validation backup.",
+        "testStrategy": "Form accepts valid scheme data, validation prevents invalid submissions, file uploads work correctly, draft saving preserves form state, progress indicators update appropriately",
+        "priority": "medium",
+        "dependencies": [
+          "4",
+          "13"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:47:04.271Z"
+      },
+      {
+        "id": "15",
+        "title": "Implement Document Upload to Supabase Storage",
+        "description": "Build secure document upload system with validation and storage management",
+        "details": "Create lib/storage/documents.ts with upload functions using Supabase Storage. Implement file validation (type, size limits, virus scanning), checksum generation for integrity, and organized folder structure by scheme ID. Set up storage policies for access control, automatic cleanup of orphaned files, and CDN configuration for fast access. Handle large file uploads with progress tracking.",
+        "testStrategy": "Valid files upload successfully with progress tracking, invalid files rejected with clear errors, checksums verify file integrity, storage policies enforce access control, large files (50MB) upload without timeout",
+        "priority": "medium",
+        "dependencies": [
+          "14"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:50:18.360Z"
+      },
+      {
+        "id": "16",
+        "title": "Implement GIS Planning Visualization Component",
+        "description": "Build interactive map component for visualizing schemes and cadastral data",
+        "details": "Create components/maps/LeafletMap.tsx using react-leaflet. Implement ParcelLayer.tsx for cadastral parcels from PostGIS, SchemeOverlay.tsx for proposed sections. Add measurement tools, zoom controls, and layer toggles. Integrate with PostGIS for spatial queries, implement spatial search functionality. Handle large datasets with clustering and level-of-detail rendering. Add drawing tools for scheme boundary definition.",
+        "testStrategy": "Map renders with cadastral layers, proposed schemes display correctly, measurement tools provide accurate results, spatial queries return correct parcels, performance acceptable with 1000+ parcels",
+        "priority": "medium",
+        "dependencies": [
+          "7",
+          "4"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:52:26.145Z"
+      },
+      {
+        "id": "17",
+        "title": "Implement Planning Authority Review Workflow",
+        "description": "Build review interface for Planning Authority to approve or reject scheme submissions",
+        "details": "Create app/(auth)/planning/review/page.tsx with review dashboard showing pending schemes. Implement review form with checklist items, annotation tools for marking up documents, and approval/rejection workflow. Integrate with workflow engine for status transitions, notification system for applicants. Add batch processing for multiple schemes, review history tracking, and delegation capabilities.",
+        "testStrategy": "Review dashboard displays pending schemes, approval workflow updates status correctly, notifications sent to applicants, review history preserved, batch operations work correctly",
+        "priority": "medium",
+        "dependencies": [
+          "10",
+          "14"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:57:19.305Z"
+      },
+      {
+        "id": "18",
+        "title": "Implement Plan Locking on Approval",
+        "description": "Enforce immutability of approved plans to preserve planning intent",
+        "details": "Create database triggers in planning schema to set locked=true on approval. Implement middleware to block edits to locked plans, create read-only views for approved plans. Add versioning system for plan amendments, implement plan comparison tools. Create audit trail for all plan modifications. Handle edge cases like approval reversal and emergency amendments.",
+        "testStrategy": "Approved plans cannot be edited, attempts to modify locked plans return errors, versioning preserves plan history, audit trail captures all changes, read-only access works correctly",
+        "priority": "high",
+        "dependencies": [
+          "17"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:59:46.105Z"
+      },
+      {
+        "id": "19",
+        "title": "Create Survey Database Schema",
+        "description": "Implement database tables for survey module with spatial geometry storage",
+        "details": "Create supabase/migrations/003_survey.sql with tables: apr.survey_sectional_plans, apr.parent_parcels, apr.section_geometries, apr.survey_computations. Implement PostGIS geometry columns with SRID 32735, spatial indexes (GIST), and foreign key constraints to planning module. Set up RLS policies for surveyor access, create computed columns for areas and quotas. Implement triggers for geometry validation.",
+        "testStrategy": "Survey tables created with proper spatial columns, foreign key constraints enforce planning approval, spatial indexes improve query performance, RLS policies restrict surveyor access, geometry validation triggers work",
+        "priority": "high",
+        "dependencies": [
+          "13"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:17:28.369Z"
+      },
+      {
+        "id": "20",
+        "title": "Implement Parent Parcel Geometry Upload",
+        "description": "Build interface for surveyors to upload and validate parent land boundary coordinates",
+        "details": "Create app/(auth)/survey/computations/upload/page.tsx with file upload for coordinate files (CSV, shapefile). Implement coordinate parsing using lib/spatial/geometry.ts, datum validation and transformation to UTM 32735. Add coordinate preview table, geometry visualization on map, and closure validation. Handle various coordinate formats and provide format conversion tools.",
+        "testStrategy": "Coordinate files parse correctly, invalid formats rejected with clear errors, geometry displays on map accurately, closure validation detects open traverses, coordinate transformation preserves accuracy",
+        "priority": "medium",
+        "dependencies": [
+          "7",
+          "19"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:05:21.515Z"
+      },
+      {
+        "id": "21",
+        "title": "Implement Outside Figure Computation",
+        "description": "Build automated boundary computation system with accuracy analysis",
+        "details": "Create survey computation engine using lib/spatial/cogo.ts for traverse calculations. Implement least squares adjustment for coordinate refinement, closure error analysis with tolerance checking (1:10,000), and area computation using coordinate geometry. Add accuracy reporting, coordinate adjustment visualization, and quality control checks. Handle various survey methods (traverse, GPS, total station).",
+        "testStrategy": "Traverse computation produces accurate closure, area calculations match manual verification, least squares adjustment improves coordinate accuracy, quality control flags problematic measurements",
+        "priority": "high",
+        "dependencies": [
+          "8",
+          "20"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:08:44.049Z"
+      },
+      {
+        "id": "22",
+        "title": "Implement Sectional Geometry Generation",
+        "description": "Generate 3D unit geometries from approved planning specifications",
+        "details": "Create geometry generation engine that reads approved plan specifications and creates unit polygons. Implement containment validation ensuring all units within parent parcel, overlap detection between units, and floor level handling for multi-story buildings. Add exclusive use area computation, common property identification, and 3D geometry support for complex buildings.",
+        "testStrategy": "Unit geometries generated match plan specifications, all units contained within parent boundary, no overlaps between units, floor levels handled correctly, exclusive use areas computed accurately",
+        "priority": "high",
+        "dependencies": [
+          "21",
+          "18"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:11:11.654Z"
+      },
+      {
+        "id": "23",
+        "title": "Implement Participation Quota Calculation",
+        "description": "Calculate each unit's share of common property using South African formula",
+        "details": "Implement quota calculation: quota = (unit_area / total_unit_area) * 100. Add validation ensuring quotas sum to exactly 100%, rounding to 4 decimal places, and handling edge cases (zero-area units, common property only). Create quota adjustment tools for manual corrections, quota history tracking, and recalculation triggers when geometries change.",
+        "testStrategy": "Quotas calculated correctly for various unit configurations, quotas always sum to 100.0000%, rounding preserves precision, recalculation works when geometries updated, edge cases handled appropriately",
+        "priority": "high",
+        "dependencies": [
+          "22"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:13:19.792Z"
+      },
+      {
+        "id": "24",
+        "title": "Implement Topology Validation for Schemes",
+        "description": "Build comprehensive spatial error detection system for sectional schemes",
+        "details": "Create validation engine using lib/spatial/validation.ts to check scheme topology. Implement overlap detection between units, gap identification in coverage, invalid geometry detection, and boundary consistency checks. Generate validation reports with error locations, provide visualization of errors on map, and suggest corrections. Handle complex cases like shared walls and easements.",
+        "testStrategy": "Overlapping units flagged with precise coordinates, gaps in coverage detected and reported, invalid geometries identified, validation reports provide actionable information, error visualization helps users locate problems",
+        "priority": "high",
+        "dependencies": [
+          "9",
+          "22"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:25:27.317Z"
+      },
+      {
+        "id": "25",
+        "title": "Implement Automated Scheme Plan Generation",
+        "description": "Generate standardized sectional title scheme plans conforming to SG requirements",
+        "details": "Create plan generation system using document templates to produce multi-page PDFs. Implement title sheet with scheme information, section diagrams with measurements, area schedules with quotas, and standard notes/disclaimers. Add scale calculation, legend generation, and north arrow positioning. Ensure compliance with Surveyor-General standards and formatting requirements.",
+        "testStrategy": "Generated plans include all required elements, measurements match computed values, scale and legend correct, PDF format meets SG standards, plans readable and professionally formatted",
+        "priority": "medium",
+        "dependencies": [
+          "11",
+          "23"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:29:02.657Z"
+      },
+      {
+        "id": "26",
+        "title": "Implement Surveyor-General Review and Sealing",
+        "description": "Build SG review interface with digital sealing capability",
+        "details": "Create app/(auth)/survey/approval/page.tsx for SG review workflow. Implement review checklist, markup tools for annotations, and compliance verification. Add digital sealing with hash generation, seal certificate creation, and status transition to 'sealed'. Integrate with workflow engine for notifications and create immutable sealed record with timestamp.",
+        "testStrategy": "SG can review survey data and plans, markup tools work correctly, digital seal applies with unique hash, sealed surveys become immutable, workflow notifications sent appropriately",
+        "priority": "medium",
+        "dependencies": [
+          "10",
+          "25"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:33:20.885Z"
+      },
+      {
+        "id": "27",
+        "title": "Create Deeds Database Schema",
+        "description": "Implement database tables for scheme registration and title management",
+        "details": "Create supabase/migrations/004_deeds.sql with tables: apr.sectional_schemes, apr.sections, apr.sectional_titles, apr.body_corporates. Implement foreign key constraints to sealed surveys, unique constraints on scheme/title numbers, and RLS policies for conveyancer/examiner access. Add status tracking, registration date fields, and digital signature references.",
+        "testStrategy": "Deeds tables created with proper constraints, foreign keys enforce sealed survey requirement, unique constraints prevent duplicate numbers, RLS policies control access appropriately",
+        "priority": "high",
+        "dependencies": [
+          "19"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:19:02.473Z"
+      },
+      {
+        "id": "28",
+        "title": "Implement Scheme Number Allocation System",
+        "description": "Build unique scheme numbering system with provincial and yearly organization",
+        "details": "Create scheme numbering service generating format SS/YYYY/PROVINCE/NNN (e.g., SS/2025/HARARE/001). Implement atomic number allocation preventing duplicates, provincial organization, and yearly reset. Add number reservation system, gap filling for cancelled schemes, and number format validation. Handle concurrent allocation requests with database-level locking.",
+        "testStrategy": "Scheme numbers generated in correct format, no duplicates even with concurrent requests, provincial organization works correctly, yearly numbering resets appropriately, number reservation prevents conflicts",
+        "priority": "high",
+        "dependencies": [
+          "27"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:22:13.093Z"
+      },
+      {
+        "id": "29",
+        "title": "Implement Body Corporate Registration",
+        "description": "Automate Body Corporate creation for sectional schemes",
+        "details": "Create Body Corporate registration system that automatically creates statutory entity when scheme registered. Implement trustee management, registration certificate generation, and governance structure setup. Add Body Corporate ID allocation, initial rules creation, and meeting scheduling framework. Link to scheme registration workflow and handle dissolution procedures.",
+        "testStrategy": "Body Corporate created automatically on scheme registration, registration certificate generated correctly, trustee information stored properly, governance structure initialized appropriately",
+        "priority": "medium",
+        "dependencies": [
+          "28"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:31:41.532Z"
+      },
+      {
+        "id": "30",
+        "title": "Implement Conveyancer Deeds Drafting Interface",
+        "description": "Build interface for conveyancers to draft unit-level legal descriptions",
+        "details": "Create app/(auth)/deeds/titles/draft/page.tsx for deeds drafting. Implement legal description templates, holder information forms, and tenure conditions setup. Add validation against sealed survey data, draft saving functionality, and collaboration tools for multiple conveyancers. Integrate with document generation for deeds packet creation.",
+        "testStrategy": "Conveyancers can draft legal descriptions, templates populate correctly with survey data, validation prevents inconsistencies with sealed survey, draft saving preserves work, collaboration features work properly",
+        "priority": "medium",
+        "dependencies": [
+          "27",
+          "26"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:35:22.608Z"
+      },
+      {
+        "id": "31",
+        "title": "Implement Deeds Examination Workflow",
+        "description": "Build examination system for Deeds Office to validate legal compliance",
+        "details": "Create examination workflow with checklist validation, cross-referencing with sealed surveys, and defect identification system. Implement examiner assignment, review tracking, and approval/rejection workflow. Add defect notification system, correction tracking, and re-examination process. Integrate with workflow engine for status management.",
+        "testStrategy": "Examination workflow processes deeds packets correctly, defects identified and communicated clearly, re-examination handles corrections properly, workflow status updates appropriately",
+        "priority": "medium",
+        "dependencies": [
+          "10",
+          "30"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:42:41.632Z"
+      },
+      {
+        "id": "32",
+        "title": "Implement Title Registration System",
+        "description": "Build system for Registrar to register approved titles in national register",
+        "details": "Create title registration system with unique title number allocation, immutable record creation, and registrar signature application. Implement registration date stamping, status transition to 'registered', and national register updates. Add registration certificate generation, notification system, and integration with certificate generation workflow.",
+        "testStrategy": "Titles register with unique numbers, registration creates immutable records, registrar signatures apply correctly, registration certificates generated properly, notifications sent appropriately",
+        "priority": "high",
+        "dependencies": [
+          "31"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:48:11.381Z"
+      },
+      {
+        "id": "33",
+        "title": "Implement Certificate Generation with QR Codes",
+        "description": "Build automated certificate generation system with security features",
+        "details": "Create certificate generation system using document templates with QR code integration. Implement document hash calculation, QR code generation linking to verification URL, and digital signature application. Add certificate versioning, template selection, and batch generation capabilities. Ensure certificates meet legal requirements and security standards.",
+        "testStrategy": "Certificates generate with all required information, QR codes scan and link to verification, document hashes provide integrity verification, digital signatures validate correctly, batch generation works efficiently",
+        "priority": "high",
+        "dependencies": [
+          "11",
+          "32"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T16:54:27.540Z"
+      },
+      {
+        "id": "34",
+        "title": "Setup PKI Integration with EJBCA",
+        "description": "Integrate external PKI system for digital signature capabilities",
+        "details": "Create lib/pki/ejbca-client.ts for EJBCA API integration. Implement certificate enrollment, signature creation, and signature verification functions. Add error handling for PKI service unavailability, certificate validation, and revocation checking. Create fallback mechanisms for PKI outages and manual signature workflows.",
+        "testStrategy": "PKI client connects to EJBCA successfully, certificates enroll correctly, signatures create and verify properly, error handling works for service outages, fallback mechanisms activate appropriately",
+        "priority": "medium",
+        "dependencies": [
+          "6"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:33:11.015Z"
+      },
+      {
+        "id": "35",
+        "title": "Integrate Digital Signatures into Approval Workflows",
+        "description": "Add PKI-based digital signatures to all approval points in the system",
+        "details": "Integrate digital signatures into Planning Authority approval, SG sealing, and Deeds registration workflows. Implement signature metadata capture (signer, role, timestamp), certificate chain storage, and signature verification. Add signature status tracking, batch signing capabilities, and signature audit trails.",
+        "testStrategy": "Digital signatures apply at all approval points, signature metadata captured correctly, certificate chains store properly, signature verification works reliably, audit trails maintain signature history",
+        "priority": "medium",
+        "dependencies": [
+          "34",
+          "26",
+          "32"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T17:21:50.034Z"
+      },
+      {
+        "id": "36",
+        "title": "Create Operations Database Schema",
+        "description": "Implement database tables for post-registration operations",
+        "details": "Create supabase/migrations/005_operations.sql with tables: apr.ownership_transfers, apr.mortgages, apr.leases, apr.scheme_amendments. Implement foreign key constraints to registered titles, status tracking, and effective date management. Add RLS policies for operations access, audit triggers for change tracking, and versioning for title history.",
+        "testStrategy": "Operations tables created with proper relationships, foreign key constraints enforce title registration requirement, RLS policies control access correctly, audit triggers capture all changes",
+        "priority": "medium",
+        "dependencies": [
+          "27"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:38:27.050Z"
+      },
+      {
+        "id": "37",
+        "title": "Implement Ownership Transfer Processing",
+        "description": "Build system to process title transfers between owners",
+        "details": "Create transfer processing workflow with validation of current ownership, new holder verification, and consideration recording. Implement transfer instrument validation, stamp duty calculation, and certificate reissuance. Add transfer history tracking, notification system, and integration with external systems (banks, legal practitioners).",
+        "testStrategy": "Transfers process correctly with proper validation, new certificates issue with updated ownership, transfer history preserves complete chain of title, notifications sent to relevant parties",
+        "priority": "medium",
+        "dependencies": [
+          "36",
+          "10"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T17:06:12.692Z"
+      },
+      {
+        "id": "38",
+        "title": "Implement Mortgage Registration System",
+        "description": "Build system for registering financial institution charges over units",
+        "details": "Create mortgage registration system with lender verification, charge amount recording, and encumbrance notation on certificates. Implement mortgage priority handling, partial release processing, and discharge workflows. Add integration with financial institutions, automated notifications, and mortgage register maintenance.",
+        "testStrategy": "Mortgages register correctly with proper encumbrance notation, priority handling works for multiple charges, discharge processing clears encumbrances properly, financial institution integration functions correctly",
+        "priority": "medium",
+        "dependencies": [
+          "36"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:40:25.524Z"
+      },
+      {
+        "id": "39",
+        "title": "Implement Scheme Amendment Processing",
+        "description": "Build system to handle scheme extensions and modifications",
+        "details": "Create amendment workflow for scheme extensions, section subdivisions, and consolidations. Implement geometry validation for amendments, quota recalculation, and re-approval workflows. Add amendment history tracking, affected party notifications, and integration with planning/survey modules for complex amendments.",
+        "testStrategy": "Amendments process through proper approval workflow, geometry validation prevents spatial conflicts, quota recalculation maintains 100% total, amendment history preserves complete record",
+        "priority": "medium",
+        "dependencies": [
+          "36",
+          "9"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T17:13:17.427Z"
+      },
+      {
+        "id": "40",
+        "title": "Create Admin Database Schema and User Management",
+        "description": "Implement user management system with role-based access control",
+        "details": "Create admin schema with user profiles, roles, permissions, and audit logs. Implement user registration workflow with credential verification, role assignment, and approval process. Add RBAC enforcement middleware, session management, and user activity tracking. Create admin dashboard for user management and system monitoring.",
+        "testStrategy": "User registration works with proper approval workflow, RBAC enforcement blocks unauthorized actions, admin dashboard displays user activity correctly, audit logs capture all user actions",
+        "priority": "medium",
+        "dependencies": [
+          "3"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T15:44:49.196Z"
+      },
+      {
+        "id": "41",
+        "title": "Implement Analytics and Reporting System",
+        "description": "Build comprehensive analytics dashboard with spatial and statistical analysis",
+        "details": "Create analytics system with provincial performance dashboards, spatial analysis tools, and report generation. Implement data aggregation queries, chart rendering with Recharts, and export functionality (PDF, Excel, CSV). Add real-time statistics, trend analysis, and customizable reporting. Integrate with all modules for comprehensive data analysis.",
+        "testStrategy": "Dashboards display accurate statistics with real-time updates, spatial analysis produces correct results, report exports contain complete data, performance acceptable with large datasets",
+        "priority": "medium",
+        "dependencies": [
+          "32",
+          "4"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T17:16:55.255Z"
+      },
+      {
+        "id": "42",
+        "title": "Implement Public Certificate Verification Portal",
+        "description": "Build public portal for certificate authenticity verification",
+        "details": "Create public verification portal allowing certificate verification by number or QR code scan. Implement hash verification, signature validation, and certificate status checking. Add verification history logging, fraud detection, and integration with PKI for signature verification. Ensure portal is accessible and user-friendly for public use.",
+        "testStrategy": "Certificate verification works correctly for valid certificates, invalid certificates properly rejected, QR code scanning functions reliably, verification history logs appropriately, fraud detection identifies suspicious activity",
+        "priority": "medium",
+        "dependencies": [
+          "33",
+          "35"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T17:28:32.279Z"
+      },
+      {
+        "id": "43",
+        "title": "Implement Public Dashboard and Landing Page",
+        "description": "Create public-facing dashboard with national statistics and system information",
+        "details": "Create app/(public)/page.tsx landing page with national inscription and key statistics. Implement public dashboard with read-only charts showing registration activity, provincial breakdown, and system performance metrics. Add responsive design, accessibility features, and multi-language support. Ensure no sensitive data exposure in public views.",
+        "testStrategy": "Landing page displays correctly with accurate statistics, public dashboard shows appropriate metrics without sensitive data, responsive design works on mobile devices, accessibility standards met",
+        "priority": "low",
+        "dependencies": [
+          "41"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T17:35:43.234Z"
+      },
+      {
+        "id": "44",
+        "title": "Implement Comprehensive Audit Trail System",
+        "description": "Build immutable audit logging system for legal compliance and transparency",
+        "details": "Create comprehensive audit system capturing all user actions, data changes, and system events. Implement immutable log storage with hash chaining, audit trail queries for legal proceedings, and compliance reporting. Add log retention policies, archive management, and integration with all modules for complete activity tracking.",
+        "testStrategy": "All user actions logged with complete context, audit trails immutable and tamper-evident, legal queries return complete history, log retention policies work correctly, archive system maintains long-term records",
+        "priority": "high",
+        "dependencies": [
+          "3",
+          "35"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T17:25:11.805Z"
+      },
+      {
+        "id": "45",
+        "title": "Implement End-to-End Integration Testing",
+        "description": "Build comprehensive test suite covering complete workflows from planning to certificate issuance",
+        "details": "Create end-to-end test suite using Playwright or Cypress covering complete user journeys. Implement test scenarios for planning submission through certificate issuance, error handling workflows, and multi-user collaboration. Add performance testing, load testing, and security testing. Create test data management and cleanup procedures.",
+        "testStrategy": "Complete workflows execute successfully in test environment, error scenarios handle gracefully, performance meets requirements under load, security tests pass without vulnerabilities, test data management maintains clean test state",
+        "priority": "high",
+        "dependencies": [
+          "43",
+          "42"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T17:54:20.093Z"
+      },
+      {
+        "id": "46",
+        "title": "Implement Performance Optimization and Monitoring",
+        "description": "Optimize system performance and implement comprehensive monitoring",
+        "details": "Implement performance optimizations including database query optimization, spatial index tuning, and caching strategies. Add monitoring with metrics collection, alerting for system issues, and performance dashboards. Implement database connection pooling, CDN configuration, and image optimization. Add health checks and uptime monitoring.",
+        "testStrategy": "System performance meets SLA requirements (<2s response time), monitoring alerts trigger appropriately for issues, database queries optimized for large datasets, caching improves response times, health checks accurately reflect system status",
+        "priority": "medium",
+        "dependencies": [
+          "45"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T18:00:57.049Z"
+      },
+      {
+        "id": "47",
+        "title": "Implement Security Hardening and Compliance",
+        "description": "Apply security best practices and ensure regulatory compliance",
+        "details": "Implement security hardening including input validation, SQL injection prevention, XSS protection, and CSRF tokens. Add rate limiting, IP whitelisting for admin functions, and security headers. Implement data encryption at rest and in transit, secure session management, and vulnerability scanning. Ensure GDPR compliance and data protection measures.",
+        "testStrategy": "Security scan shows no critical vulnerabilities, penetration testing passes, OWASP Top 10 protections implemented, data encryption verified, compliance requirements met, security headers properly configured",
+        "priority": "high",
+        "dependencies": [
+          "45"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T17:56:56.887Z"
+      },
+      {
+        "id": "48",
+        "title": "Implement Backup and Disaster Recovery",
+        "description": "Set up comprehensive backup strategy and disaster recovery procedures",
+        "details": "Implement automated database backups with point-in-time recovery, file storage backups, and configuration backups. Create disaster recovery procedures with RTO/RPO targets, failover testing, and recovery documentation. Add backup verification, restore testing, and off-site backup storage. Implement monitoring for backup success and retention management.",
+        "testStrategy": "Automated backups complete successfully, point-in-time recovery works correctly, disaster recovery procedures tested and documented, backup verification confirms data integrity, restore testing validates recovery capability",
+        "priority": "high",
+        "dependencies": [
+          "46"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T18:05:27.848Z"
+      },
+      {
+        "id": "49",
+        "title": "Implement Production Deployment and DevOps Pipeline",
+        "description": "Set up production deployment infrastructure and CI/CD pipeline",
+        "details": "Set up production hosting infrastructure with load balancing, SSL certificates, and domain configuration. Implement CI/CD pipeline with automated testing, deployment automation, and rollback capabilities. Add environment management (staging, production), secrets management, and deployment monitoring. Configure CDN, database scaling, and performance monitoring.",
+        "testStrategy": "Production deployment succeeds without errors, CI/CD pipeline runs automated tests successfully, rollback procedures work correctly, SSL certificates configured properly, performance monitoring shows healthy metrics",
+        "priority": "high",
+        "dependencies": [
+          "47",
+          "48"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T18:12:33.546Z"
+      },
+      {
+        "id": "50",
+        "title": "Conduct User Acceptance Testing and Training",
+        "description": "Execute comprehensive user acceptance testing and provide user training",
+        "details": "Conduct user acceptance testing with representatives from all user roles (planners, surveyors, conveyancers, etc.). Create comprehensive user documentation, training materials, and video tutorials. Implement user feedback collection, issue tracking, and resolution process. Provide hands-on training sessions and create support procedures for go-live.",
+        "testStrategy": "UAT scenarios complete successfully with user sign-off, training materials cover all system functions, user feedback incorporated into final release, support procedures tested and documented, users demonstrate competency with system",
+        "priority": "high",
+        "dependencies": [
+          "49"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-24T18:16:27.653Z"
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2025-12-24T18:16:27.653Z",
+      "taskCount": 50,
+      "completedCount": 50,
+      "tags": [
+        "master"
+      ]
+    }
+  }
+}

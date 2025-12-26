@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+description: Best practices for using Supabase as a backend  
+globs: **/*.{ts,tsx}  
+---  
+
+- Use Row-Level Security (RLS) to enforce data access policies.
+- Structure your database schema to minimize redundancy and optimize queries.
+- Utilize Supabase's real-time capabilities for live updates in your application.
+- Regularly back up your database and test recovery procedures.

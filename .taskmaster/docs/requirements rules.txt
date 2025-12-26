@@ -1,0 +1,102 @@
+  To ensure the best practices are tailored to your project, please adapt the globs according to your specific needs. Below are the best practices for each major library/framework identified in your dependencies.
+
+---
+
+name: nextjs-best-practices.mdc  
+description: Best practices for Next.js applications and routing  
+globs: **/*.{ts,tsx}  
+---  
+
+- Use the App Router for better performance and improved data fetching.
+- Implement proper error boundaries to handle errors gracefully.
+- Optimize images and static assets for faster load times.
+- Utilize API routes for server-side logic and data fetching.
+
+---
+
+name: typescript-best-practices.mdc  
+description: TypeScript coding standards and type safety guidelines  
+globs: **/*.{ts,tsx}  
+---  
+
+- Use strict null checks to avoid runtime errors.
+- Prefer interfaces over type aliases for object shapes.
+- Implement type guards to ensure type safety in conditional logic.
+- Use generics to create reusable and type-safe components.
+
+---
+
+name: supabase-best-practices.mdc  
+description: Best practices for using Supabase as a backend  
+globs: **/*.{ts,tsx}  
+---  
+
+- Use Row-Level Security (RLS) to enforce data access policies.
+- Structure your database schema to minimize redundancy and optimize queries.
+- Utilize Supabase's real-time capabilities for live updates in your application.
+- Regularly back up your database and test recovery procedures.
+
+---
+
+name: postgis-best-practices.mdc  
+description: Best practices for spatial data management with PostGIS  
+globs: **/*.{sql}  
+---  
+
+- Use spatial indexes (GIST) on geometry columns for faster queries.
+- Validate geometries using PostGIS functions (e.g., ST_IsValid) before storing.
+- Regularly analyze and vacuum your spatial tables to maintain performance.
+- Use appropriate SRIDs for your spatial data to ensure accuracy in calculations.
+
+---
+
+name: react-best-practices.mdc  
+description: Best practices for React component development  
+globs: **/*.{ts,tsx}  
+---  
+
+- Use functional components and hooks for cleaner and more maintainable code.
+- Implement memoization (React.memo, useMemo) to optimize performance.
+- Keep components small and focused on a single responsibility.
+- Use PropTypes or TypeScript for type-checking props.
+
+---
+
+name: tailwindcss-best-practices.mdc  
+description: Best practices for styling with Tailwind CSS  
+globs: **/*.{ts,tsx,css}  
+---  
+
+- Use utility-first classes to build responsive designs without custom CSS.
+- Leverage Tailwind's JIT mode for faster build times and on-demand class generation.
+- Organize your Tailwind configuration for easy maintenance and scalability.
+- Use variants (hover, focus) to enhance interactivity and accessibility.
+
+---
+
+name: jest-best-practices.mdc  
+description: Best practices for testing with Jest  
+globs: **/*.{ts,tsx}  
+---  
+
+- Write unit tests for all components and utility functions.
+- Use snapshot testing for components to catch unexpected changes.
+- Mock external dependencies to isolate tests and improve performance.
+- Organize tests alongside components for better maintainability.
+
+---
+
+name: react-query-best-practices.mdc  
+description: Best practices for data fetching with React Query  
+globs: **/*.{ts,tsx}  
+---  
+
+- Use query keys to uniquely identify queries and manage cache effectively.
+- Implement background refetching to keep data fresh without user intervention.
+- Use mutation hooks for creating, updating, and deleting data with optimistic updates.
+- Leverage the devtools for debugging and monitoring query states.
+
+---
+
+These best practices will help you maintain a high-quality codebase and improve the performance and reliability of your application. Adjust the globs as necessary to fit your project's structure.
+

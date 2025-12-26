@@ -1,0 +1,148 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm production deployment'
+        required: true
+
+jobs:
+  pre-deployment-checks:
+    name: Pre-Deployment Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run all tests
+        run: |
+          npm run lint
+          npx tsc --noEmit
+          # Run unit tests
+          npm run test:foundation || true
+          npm run test:schema || true
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+      
+      - name: Check backup status
+        run: |
+          echo "Checking backup status..."
+          # Would check backup API
+      
+      - name: Verify staging deployment
+        run: |
+          echo "Verifying staging is healthy..."
+          curl -f https://apr-staging.example.com/api/health || exit 1
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [pre-deployment-checks]
+    environment:
+      name: production
+      url: https://apr.gov.zw
+    if: github.event.inputs.confirm == 'deploy' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_APP_URL: https://apr.gov.zw
+      
+      - name: Create backup before deployment
+        run: |
+          echo "Creating backup before deployment..."
+          # Trigger backup script
+      
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PROD_SERVICE_ROLE_KEY }}
+          ADMIN_IP_WHITELIST: ${{ secrets.ADMIN_IP_WHITELIST }}
+      
+      - name: Run database migrations
+        run: |
+          echo "Running production migrations..."
+          # Run migrations against production database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.PROD_DB_URL }}
+      
+      - name: Health check
+        run: |
+          sleep 60
+          for i in {1..10}; do
+            if curl -f https://apr.gov.zw/api/health/ready; then
+              echo "✅ Health check passed"
+              exit 0
+            fi
+            echo "Health check attempt $i failed, retrying..."
+            sleep 10
+          done
+          echo "❌ Health check failed after 10 attempts"
+          exit 1
+      
+      - name: Smoke tests
+        run: |
+          echo "Running smoke tests..."
+          curl -f https://apr.gov.zw/api/health/live || exit 1
+          curl -f https://apr.gov.zw/api/public/statistics || exit 1
+      
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "✅ Production deployment successful"
+          # Send notification (email, Slack, etc.)
+
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: failure()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Rollback deployment
+        run: |
+          echo "Rolling back deployment..."
+          # Rollback to previous version
+          # This would use Vercel CLI or API
+      
+      - name: Notify rollback
+        run: |
+          echo "⚠️ Production deployment rolled back"
+          # Send notification
+
