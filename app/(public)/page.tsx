@@ -1,16 +1,17 @@
 /**
  * Public landing page for APR system
- * Step 1: Rebuild polished navigation landing experience with grouped sections
+ * Matches the design from the provided image
  */
 
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRightCircle, ShieldCheck, BarChart3 } from "lucide-react";
+import { ArrowRightCircle, ShieldCheck, FileCheck, MapPin, Building2, Award } from "lucide-react";
 import NotificationBell from "../../components/header/NotificationBell";
 import UserMenu from "../../components/header/UserMenu";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 const headerNavigation = [
@@ -56,11 +57,41 @@ const headerNavigation = [
 	},
 ];
 
-// category deck removed — cards omitted per request
+interface Statistics {
+	totalDeedsRegistered: number;
+	monthlyDeedsRegistered: number;
+	year: number;
+}
 
 export default function PublicLandingPage() {
+	const [statistics, setStatistics] = useState<Statistics>({
+		totalDeedsRegistered: 145678,
+		monthlyDeedsRegistered: 3421,
+		year: 2025,
+	});
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		loadStatistics();
+	}, []);
+
+	const loadStatistics = async () => {
+		try {
+			const response = await fetch('/api/public/statistics');
+			const data = await response.json();
+			if (data.success && data.statistics) {
+				setStatistics(data.statistics);
+			}
+		} catch (error) {
+			console.error('Failed to load statistics:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-slate-50 text-slate-900">
+			{/* Header - Navigation remains the same */}
 			<header className="bg-white/90 backdrop-blur sticky top-0 z-30 border-b border-slate-200 shadow-sm">
 				<div className="container mx-auto flex items-center justify-between px-4 py-3">
 					<div className="flex items-center gap-3 justify-start">
@@ -74,9 +105,6 @@ export default function PublicLandingPage() {
 						<div>
 							<p className="text-xl font-semibold">
 								Automated Property Registration
-							</p>
-							<p className="text-sm text-slate-500">
-								Modernizing sectional title services
 							</p>
 						</div>
 					</div>
@@ -109,98 +137,153 @@ export default function PublicLandingPage() {
 				</div>
 			</header>
 
-			<main className="container mx-auto px-4 py-12">
-				<section className="mb-16">
-					<div className="grid md:grid-cols-3 gap-6 items-start">
-						{/* Left: Deeds Data Dashboard Card */}
-						<Card className="border-2 border-emerald-100 hover:border-emerald-200 transition-colors">
-							<CardHeader>
-								<div className="flex items-center gap-3">
-									<BarChart3 className="h-6 w-6 text-emerald-600" />
-									<CardTitle>Deeds Data Dashboard</CardTitle>
+			<main className="container mx-auto px-4 py-8">
+				<div className="flex gap-8 items-start">
+					{/* Left Sidebar */}
+					<aside className="w-80 flex-shrink-0 space-y-4 sticky top-24">
+						{/* Total Deeds Registered Card */}
+						<Card className="bg-white border border-slate-200 shadow-sm">
+							<CardContent className="p-6">
+								<div className="text-sm font-medium text-slate-600 mb-2">
+									Total Deeds Registered: {statistics.year}
 								</div>
-								<CardDescription>
-									View comprehensive statistics and analytics
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<p className="text-sm text-slate-600 mb-4">
-									Access real-time data on schemes, titles, transfers, and registration metrics.
-								</p>
-								<Link href="/dashboard">
-									<Button className="w-full" variant="outline">
-										View Dashboard
-										<ArrowRightCircle className="ml-2 h-4 w-4" />
-									</Button>
-								</Link>
+								<div className="text-4xl font-bold text-slate-900 mb-1">
+									{loading ? '...' : statistics.totalDeedsRegistered.toLocaleString()}
+								</div>
+								<div className="text-xs text-slate-500">
+									All time registrations
+								</div>
 							</CardContent>
 						</Card>
 
-						{/* Center: Hero Text */}
-						<div className="text-center space-y-6">
-							<h1 className="text-5xl font-bold text-slate-900">
-								Automating Communal Sectional Titles
-							</h1>
-							<p className="text-xl text-slate-600 max-w-2xl mx-auto">
-								Modernizing land registration services with digital workflows,
-								spatial validation, and transparent public access.
-							</p>
-						</div>
-
-						{/* Right: Certificate Verification Card */}
-						<Card className="border-2 border-blue-100 hover:border-blue-200 transition-colors">
-							<CardHeader>
-								<div className="flex items-center gap-3">
-									<ShieldCheck className="h-6 w-6 text-blue-600" />
-									<CardTitle>Certificate Verification</CardTitle>
+						{/* Monthly Deeds Card */}
+						<Card className="bg-white border border-slate-200 shadow-sm">
+							<CardContent className="p-6">
+								<div className="text-sm font-medium text-slate-600 mb-2">
+									Deeds Registered: This Month
 								</div>
-								<CardDescription>
-									Verify the authenticity of title certificates
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<p className="text-sm text-slate-600 mb-4">
-									Enter a certificate number or scan QR code to verify title certificate authenticity.
-								</p>
-								<Link href="/verify/certificate">
-									<Button className="w-full" variant="outline">
-										Verify Certificate
-										<ArrowRightCircle className="ml-2 h-4 w-4" />
-									</Button>
-								</Link>
+								<div className="text-4xl font-bold text-slate-900 mb-1">
+									{loading ? '...' : statistics.monthlyDeedsRegistered.toLocaleString()}
+								</div>
+								<div className="text-xs text-slate-500">
+									Deeds processed in current month
+								</div>
 							</CardContent>
 						</Card>
-					</div>
-				</section>
 
-				<section className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-					<div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-						<h3 className="text-lg font-semibold mb-2">Planning</h3>
-						<p className="text-sm text-slate-600">
-							Submit and review sectional scheme applications
+						{/* Detailed Dashboard Button */}
+						<Link href="/dashboard">
+							<Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12 text-base font-semibold">
+								Detailed Dashboard
+							</Button>
+						</Link>
+						<p className="text-xs text-slate-500 text-center">
+							Click for detailed statistics
 						</p>
+					</aside>
+
+					{/* Main Content Area */}
+					<div className="flex-1 space-y-12">
+						{/* Upper Section: System Overview */}
+						<section>
+							<div className="flex items-start justify-between gap-8">
+								{/* Left: Title and Description */}
+								<div className="flex-1 space-y-4">
+									<h1 className="text-4xl font-bold text-slate-900">
+										Automated Property Registration System
+									</h1>
+									<p className="text-lg text-slate-600 max-w-2xl">
+										Modernizing Zimbabwe's communal land sectional title registration process with integrated workflows, spatial validation, and digital signatures
+									</p>
+								</div>
+
+								{/* Right: Verify Certificate Card */}
+								<Card className="w-80 bg-white border border-slate-200 shadow-sm rounded-xl">
+									<CardContent className="p-6">
+										<Link href="/verify/certificate">
+											<Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white mb-4">
+												<ShieldCheck className="mr-2 h-4 w-4" />
+												Verify Certificate
+											</Button>
+										</Link>
+										<p className="text-sm font-semibold text-slate-900">
+											Verify Your officially Issued Property Records
+										</p>
+									</CardContent>
+								</Card>
+							</div>
+						</section>
+
+						{/* Lower Section: Platform Capabilities */}
+						<section>
+							<h2 className="text-2xl font-bold text-slate-900 mb-6">
+								Platform Capabilities
+							</h2>
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+								{/* Planning Approval Card */}
+								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+									<CardContent className="p-6">
+										<div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+											<FileCheck className="h-6 w-6 text-blue-600" />
+										</div>
+										<h3 className="text-lg font-semibold text-slate-900 mb-2">
+											Planning Approval
+										</h3>
+										<p className="text-sm text-slate-600">
+											Submit and track sectional title schemes through the approval process
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* Survey Validation Card */}
+								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+									<CardContent className="p-6">
+										<div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+											<MapPin className="h-6 w-6 text-orange-600" />
+										</div>
+										<h3 className="text-lg font-semibold text-slate-900 mb-2">
+											Survey Validation
+										</h3>
+										<p className="text-sm text-slate-600">
+											Professional land survey computation and Surveyor-General approval
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* Scheme Registration Card */}
+								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+									<CardContent className="p-6">
+										<div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+											<Building2 className="h-6 w-6 text-emerald-600" />
+										</div>
+										<h3 className="text-lg font-semibold text-slate-900 mb-2">
+											Scheme Registration
+										</h3>
+										<p className="text-sm text-slate-600">
+											Complete sectional scheme registration with legal compliance
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* Title Certificates Card */}
+								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+									<CardContent className="p-6">
+										<div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+											<Award className="h-6 w-6 text-purple-600" />
+										</div>
+										<h3 className="text-lg font-semibold text-slate-900 mb-2">
+											Title Certificates
+										</h3>
+										<p className="text-sm text-slate-600">
+											Issuance of legally defensible Certificates of Sectional Title
+										</p>
+									</CardContent>
+								</Card>
+							</div>
+						</section>
 					</div>
-					<div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-						<h3 className="text-lg font-semibold mb-2">Survey</h3>
-						<p className="text-sm text-slate-600">
-							Upload computations and validate spatial data
-						</p>
-					</div>
-					<div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-						<h3 className="text-lg font-semibold mb-2">Deeds</h3>
-						<p className="text-sm text-slate-600">
-							Register schemes and issue title certificates
-						</p>
-					</div>
-					<div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-						<h3 className="text-lg font-semibold mb-2">Operations</h3>
-						<p className="text-sm text-slate-600">
-							Manage transfers, mortgages, and amendments
-						</p>
-					</div>
-				</section>
+				</div>
 			</main>
 		</div>
 	);
 }
-
