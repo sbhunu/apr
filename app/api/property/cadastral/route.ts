@@ -10,11 +10,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerClient(request)
+    const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     
     // Get bounding box from query params (southwest_lat, southwest_lng, northeast_lat, northeast_lng)

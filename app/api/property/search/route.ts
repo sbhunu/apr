@@ -4,11 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerClient(request)
+    const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q')?.trim()
 
@@ -16,40 +16,62 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ properties: [] }, { status: 200 })
     }
 
-    // Search in multiple tables/views
+    // Determine if this is a property ID search (numeric/alphanumeric) or address search
+    // Property IDs must contain numbers or be UUIDs
+    // Place names (even single-word ones like "Chiweshe") should go to geocoding
+    const hasNumbers = /\d/.test(query)
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(query)
+    const isPropertyIdSearch = (hasNumbers || isUUID) && query.length < 50 && !query.includes(',') && !query.includes(' ')
+
+    // Search in multiple tables/views - only for property ID searches
+    // Address searches should use geocoding API instead
     const searchLower = query.toLowerCase()
+    const escapedQuery = query.replace(/'/g, "''") // Escape single quotes for SQL
+    const escapedSearchLower = searchLower.replace(/'/g, "''")
 
-    // Search sectional titles
-    const { data: titles, error: titlesError } = await supabase
-      .from('sectional_titles')
-      .select('id, title_number, holder_name, registration_date, section_id')
-      .or(`title_number.ilike.%${query}%,holder_name.ilike.%${searchLower}%`)
-      .limit(20)
+    let titles: any[] = []
+    let sections: any[] = []
+    let schemes: any[] = []
 
-    if (titlesError) {
-      console.error('Error searching titles:', titlesError)
-    }
+    if (isPropertyIdSearch) {
+      // Search sectional titles by title number or ID
+      const { data: titlesData, error: titlesError } = await supabase
+        .from('sectional_titles')
+        .select('id, title_number, holder_name, registration_date, section_id')
+        .or(`title_number.ilike.%${escapedQuery}%,id.eq.${escapedQuery}`)
+        .limit(20)
 
-    // Search sections
-    const { data: sections, error: sectionsError } = await supabase
-      .from('sections')
-      .select('id, section_number, scheme_id')
-      .or(`section_number.ilike.%${query}%`)
-      .limit(20)
+      if (titlesError) {
+        console.error('Error searching titles:', titlesError)
+      } else {
+        titles = titlesData || []
+      }
 
-    if (sectionsError) {
-      console.error('Error searching sections:', sectionsError)
-    }
+      // Search sections by section number
+      const { data: sectionsData, error: sectionsError } = await supabase
+        .from('sections')
+        .select('id, section_number, scheme_id')
+        .ilike('section_number', `%${escapedQuery}%`)
+        .limit(20)
 
-    // Search schemes
-    const { data: schemes, error: schemesError } = await supabase
-      .from('sectional_schemes')
-      .select('id, scheme_number, scheme_name, location')
-      .or(`scheme_number.ilike.%${query}%,scheme_name.ilike.%${searchLower}%`)
-      .limit(20)
+      if (sectionsError) {
+        console.error('Error searching sections:', sectionsError)
+      } else {
+        sections = sectionsData || []
+      }
 
-    if (schemesError) {
-      console.error('Error searching schemes:', schemesError)
+      // Search schemes by scheme number
+      const { data: schemesData, error: schemesError } = await supabase
+        .from('sectional_schemes')
+        .select('id, scheme_number, scheme_name, location')
+        .ilike('scheme_number', `%${escapedQuery}%`)
+        .limit(20)
+
+      if (schemesError) {
+        console.error('Error searching schemes:', schemesError)
+      } else {
+        schemes = schemesData || []
+      }
     }
 
     // Fetch geometries for found properties
