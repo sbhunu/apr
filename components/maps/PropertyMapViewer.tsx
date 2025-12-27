@@ -612,7 +612,7 @@ export function PropertyMapViewer({
 
       {/* Cadastral Layer Status - Shows when layer is active */}
       {cadastralParcelCount > 0 || cadastralError ? (
-        <Card className="absolute top-32 right-4 z-[1000] p-2 max-w-xs">
+        <Card className="absolute bottom-32 right-4 z-[1000] p-2 max-w-xs">
           <div className="text-xs space-y-1">
             <div className="flex items-center gap-2">
               <Layers className="h-3 w-3" />
