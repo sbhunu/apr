@@ -5,6 +5,7 @@
 
 'use client'
 
+import PropertyProcessesLayout from "@/components/layouts/PropertyProcessesLayout";
 import CollapsibleNavigate from "@/components/navigation/CollapsibleNavigate";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,21 +21,19 @@ const planningMenu = [
 
 export default function PlanningLandingPage() {
 	return (
-		<div className="container mx-auto px-4 py-8">
-			<div className="grid lg:grid-cols-4 gap-8">
-				<aside className="sticky top-6 hidden lg:block">
-					<div className="w-64">
-						<CollapsibleNavigate menu={planningMenu} />
-					</div>
-				</aside>
+		<PropertyProcessesLayout
+			currentPage="planning"
+			heroTitle="Planning & Scheme Submission"
+			heroDescription="Submit sectional scheme applications and track their progress through the approval workflow.">
+			<div className="container mx-auto px-4 py-8">
+				<div className="grid lg:grid-cols-4 gap-8">
+					<aside className="sticky top-6 hidden lg:block">
+						<div className="w-64">
+							<CollapsibleNavigate menu={planningMenu} />
+						</div>
+					</aside>
 
-				<main className="lg:col-span-3 space-y-6">
-					<div className="space-y-2">
-						<h1 className="text-4xl font-bold">Planning & Scheme Submission</h1>
-						<p className="text-muted-foreground">
-							Submit sectional scheme applications and track their progress through the approval workflow.
-						</p>
-					</div>
+					<main className="lg:col-span-3 space-y-6">
 
 					<div className="grid md:grid-cols-2 gap-6">
 						<Card>
@@ -106,8 +105,9 @@ export default function PlanningLandingPage() {
 						</Card>
 					</div>
 				</main>
+				</div>
 			</div>
-		</div>
+		</PropertyProcessesLayout>
 	);
 }
 

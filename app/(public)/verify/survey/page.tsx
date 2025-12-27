@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import VerificationsLayout from '@/components/layouts/VerificationsLayout'
 import {
   Card,
   CardContent,
@@ -76,7 +77,11 @@ export default function SurveyVerificationPage() {
   }
 
   return (
-    <div className="container mx-auto py-10 space-y-6">
+    <VerificationsLayout
+      currentPage="survey"
+      heroTitle="Survey Verification"
+      heroDescription="Verify that a survey plan is sealed and signed by the Surveyor-General. Check seal metadata, signature status, and validation details.">
+      <div className="container mx-auto py-10 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Survey Verification</CardTitle>
@@ -168,7 +173,8 @@ export default function SurveyVerificationPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </VerificationsLayout>
   )
 }
 

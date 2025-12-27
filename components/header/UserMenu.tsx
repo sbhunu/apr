@@ -24,11 +24,6 @@ export default function UserMenu() {
             Change Password
           </Link>
           <Link
-            href="/admin/security"
-            className="block rounded px-3 py-2 text-sm hover:bg-slate-50">
-            Admin Security
-          </Link>
-          <Link
             href="/login"
             className="block rounded px-3 py-2 text-sm text-emerald-600 hover:bg-slate-50">
             Sign out

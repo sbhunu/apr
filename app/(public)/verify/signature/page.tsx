@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import VerificationsLayout from '@/components/layouts/VerificationsLayout'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -95,19 +96,12 @@ export default function SignatureValidationPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <Card className="p-6 mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Shield className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Digital Signature Validation</h1>
-        </div>
-        <p className="text-muted-foreground">
-          Verify the authenticity and validity of digital signatures through PKI (Public Key Infrastructure) validation.
-          Enter a signature ID to check its status, certificate validity, and revocation status.
-        </p>
-      </Card>
-
-      {/* Search Form */}
+    <VerificationsLayout
+      currentPage="signature"
+      heroTitle="Digital Signature Validation"
+      heroDescription="Verify the authenticity and validity of digital signatures through PKI (Public Key Infrastructure) validation. Enter a signature ID to check its status, certificate validity, and revocation status.">
+      <div className="container mx-auto py-8 px-4 max-w-4xl">
+        {/* Search Form */}
       <Card className="p-6 mb-6">
         <div className="flex gap-4">
           <div className="flex-1">
@@ -367,7 +361,8 @@ export default function SignatureValidationPage() {
           </ol>
         </Card>
       )}
-    </div>
+      </div>
+    </VerificationsLayout>
   )
 }
 

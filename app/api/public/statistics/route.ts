@@ -38,26 +38,24 @@ export const GET = withErrorHandler(async () => {
       console.error('Error fetching monthly deeds:', monthlyError)
     }
 
-    // Return statistics
-    // Using values from image: 145,678 total and 3,421 monthly
-    // In production, these would come from the database queries above
+    // Return live statistics from database (0 if no records found)
     return NextResponse.json({
       success: true,
       statistics: {
-        totalDeedsRegistered: totalDeeds || 145678,
-        monthlyDeedsRegistered: monthlyDeeds || 3421,
-        year: 2025, // System start year or current year
+        totalDeedsRegistered: totalDeeds ?? 0,
+        monthlyDeedsRegistered: monthlyDeeds ?? 0,
+        year: new Date().getFullYear(),
       },
     })
   } catch (error) {
     console.error('Error fetching statistics:', error)
-    // Return default values on error
+    // Return 0 on error instead of hardcoded values
     return NextResponse.json({
       success: true,
       statistics: {
-        totalDeedsRegistered: 145678,
-        monthlyDeedsRegistered: 3421,
-        year: 2025,
+        totalDeedsRegistered: 0,
+        monthlyDeedsRegistered: 0,
+        year: new Date().getFullYear(),
       },
     })
   }

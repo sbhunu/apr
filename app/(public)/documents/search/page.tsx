@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import ReportingLayout from '@/components/layouts/ReportingLayout'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -70,13 +71,11 @@ export default function DocumentSearchPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Card className="p-6 mb-6">
-        <h1 className="text-3xl font-bold mb-2">General Records Search</h1>
-        <p className="text-muted-foreground">
-          Search across planning documents, survey plans, title certificates, mortgages, leases, and other important documents.
-        </p>
-      </Card>
+    <ReportingLayout
+      currentPage="records-search"
+      heroTitle="General Records Search"
+      heroDescription="Search across planning documents, survey plans, title certificates, mortgages, leases, and other important documents. Find records by document title, ID, scheme number, title number, or holder name.">
+      <div className="container mx-auto py-8 px-4">
 
       {/* Search Form */}
       <Card className="p-6 mb-6">
@@ -190,7 +189,8 @@ export default function DocumentSearchPage() {
           }}
         />
       )}
-    </div>
+      </div>
+    </ReportingLayout>
   )
 }
 

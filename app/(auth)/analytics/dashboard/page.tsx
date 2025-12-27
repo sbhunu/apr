@@ -6,6 +6,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ReportingLayout from '@/components/layouts/ReportingLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -150,15 +151,13 @@ export default function AnalyticsDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
-            Comprehensive analytics and reporting for APR system
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <ReportingLayout
+      currentPage="analytics"
+      heroTitle="Analytics Dashboard"
+      heroDescription="Comprehensive analytics and reporting for APR system. View performance metrics, trends, provincial breakdowns, and export detailed reports.">
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-end">
+          <div className="flex gap-2">
           <Button onClick={() => handleExport('pdf')} variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export PDF
@@ -167,8 +166,8 @@ export default function AnalyticsDashboardPage() {
             <Download className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
+          </div>
         </div>
-      </div>
 
       {error && (
         <Alert variant="destructive">
@@ -456,7 +455,8 @@ export default function AnalyticsDashboardPage() {
           </Card>
         </Link>
       </div>
-    </div>
+      </div>
+    </ReportingLayout>
   )
 }
 

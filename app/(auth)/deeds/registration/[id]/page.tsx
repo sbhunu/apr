@@ -100,7 +100,7 @@ export default function TitleRegistrationDetailPage() {
       if (data.success) {
         setSuccess(`Title registered successfully: ${data.titleNumber}`)
         setTimeout(() => {
-          router.push('/deeds/registration')
+          router.push('/deeds/titles/register')
         }, 3000)
       } else {
         setError(data.error || 'Failed to register title')

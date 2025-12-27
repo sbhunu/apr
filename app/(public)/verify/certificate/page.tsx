@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import VerificationsLayout from '@/components/layouts/VerificationsLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -101,15 +102,12 @@ export default function CertificateVerificationByNumberPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold">Certificate Verification Portal</h1>
-        <p className="text-muted-foreground">
-          Verify the authenticity of Sectional Title Certificates
-        </p>
-      </div>
-
-      {/* Verification Methods */}
+    <VerificationsLayout
+      currentPage="certificate"
+      heroTitle="Certificate Verification Portal"
+      heroDescription="Verify the authenticity of Sectional Title Certificates using certificate numbers or QR codes. Ensure document integrity and validate digital signatures.">
+      <div className="container mx-auto p-6 max-w-4xl space-y-6">
+        {/* Verification Methods */}
       {!result && (
         <Card>
           <CardHeader>
@@ -353,7 +351,8 @@ export default function CertificateVerificationByNumberPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </VerificationsLayout>
   )
 }
 

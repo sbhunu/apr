@@ -1,17 +1,18 @@
-import JobEnqueue from "@/components/admin/JobEnqueue";
-import { createClient } from "@/lib/supabase/server";
+import JobEnqueueWrapper from "@/components/admin/JobEnqueueWrapper";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 0;
 
 export default async function JobsPage() {
   const supabase = await createClient();
 
+  // Query jobs via public view (apr.jobs exposed as public.jobs)
   const { data: jobs, error } = await supabase
-    .from("apr.jobs")
-    .select("*")
-    .order("created_at", { ascending: false })
+    .from('jobs')
+    .select('*')
+    .order('created_at', { ascending: false })
     .limit(50);
 
   return (
@@ -30,7 +31,7 @@ export default async function JobsPage() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="md:col-span-1">
-          <JobEnqueue onCreated={() => location.reload()} />
+          <JobEnqueueWrapper />
         </div>
 
         <div className="md:col-span-2">

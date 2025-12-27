@@ -6,7 +6,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import ReportingLayout from '@/components/layouts/ReportingLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -37,7 +37,6 @@ import {
   TrendingUp,
   Building2,
   FileText,
-  ArrowLeft,
   RefreshCw,
   AlertTriangle,
 } from 'lucide-react'
@@ -123,39 +122,23 @@ export default function PublicDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Home
-                </Button>
-              </Link>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                <h1 className="text-xl font-bold">Public Dashboard</h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {mounted && lastUpdated && (
-                <Badge variant="outline" className="text-xs">
-                  Last updated: {lastUpdated.toLocaleTimeString()}
-                </Badge>
-              )}
-              <Button onClick={loadStatistics} variant="outline" size="sm" disabled={loading}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <ReportingLayout
+      currentPage="dashboard"
+      heroTitle="Public Dashboard"
+      heroDescription="Public-facing dashboard displaying national statistics and registration metrics. View aggregated data on schemes, titles, transfers, and more.">
       <div className="container mx-auto px-4 py-8 space-y-6">
+        {/* Refresh Controls */}
+        <div className="flex items-center justify-end gap-4">
+          {mounted && lastUpdated && (
+            <Badge variant="outline" className="text-xs">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </Badge>
+          )}
+          <Button onClick={loadStatistics} variant="outline" size="sm" disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
         {/* Error Display */}
         {error && (
           <Alert variant="destructive">
@@ -213,7 +196,7 @@ export default function PublicDashboardPage() {
                   <CardDescription>Schemes</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{statistics.totalSchemes.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">{(statistics.totalSchemes ?? 0).toLocaleString()}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -221,7 +204,7 @@ export default function PublicDashboardPage() {
                   <CardDescription>Titles</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{statistics.totalTitles.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">{(statistics.totalTitles ?? 0).toLocaleString()}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -230,7 +213,7 @@ export default function PublicDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {statistics.totalTransfers.toLocaleString()}
+                    {(statistics.totalTransfers ?? 0).toLocaleString()}
                   </div>
                 </CardContent>
               </Card>
@@ -240,7 +223,7 @@ export default function PublicDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {statistics.totalAmendments.toLocaleString()}
+                    {(statistics.totalAmendments ?? 0).toLocaleString()}
                   </div>
                 </CardContent>
               </Card>
@@ -250,7 +233,7 @@ export default function PublicDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {statistics.totalMortgages.toLocaleString()}
+                    {(statistics.totalMortgages ?? 0).toLocaleString()}
                   </div>
                 </CardContent>
               </Card>
@@ -259,7 +242,7 @@ export default function PublicDashboardPage() {
                   <CardDescription>Leases</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{statistics.totalLeases.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">{(statistics.totalLeases ?? 0).toLocaleString()}</div>
                 </CardContent>
               </Card>
             </div>
@@ -274,7 +257,7 @@ export default function PublicDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={statistics.byMonth}>
+                    <LineChart data={statistics.byMonth ?? []}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
@@ -314,7 +297,7 @@ export default function PublicDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={statistics.byProvince}>
+                    <BarChart data={statistics.byProvince ?? []}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="province" angle={-45} textAnchor="end" height={100} />
                       <YAxis />
@@ -338,9 +321,9 @@ export default function PublicDashboardPage() {
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Submitted', value: statistics.byStatus.planning.submitted },
-                          { name: 'Approved', value: statistics.byStatus.planning.approved },
-                          { name: 'Rejected', value: statistics.byStatus.planning.rejected },
+                          { name: 'Submitted', value: statistics.byStatus?.planning?.submitted ?? 0 },
+                          { name: 'Approved', value: statistics.byStatus?.planning?.approved ?? 0 },
+                          { name: 'Rejected', value: statistics.byStatus?.planning?.rejected ?? 0 },
                         ]}
                         cx="50%"
                         cy="50%"
@@ -351,9 +334,9 @@ export default function PublicDashboardPage() {
                         dataKey="value"
                       >
                         {[
-                          { name: 'Submitted', value: statistics.byStatus.planning.submitted },
-                          { name: 'Approved', value: statistics.byStatus.planning.approved },
-                          { name: 'Rejected', value: statistics.byStatus.planning.rejected },
+                          { name: 'Submitted', value: statistics.byStatus?.planning?.submitted ?? 0 },
+                          { name: 'Approved', value: statistics.byStatus?.planning?.approved ?? 0 },
+                          { name: 'Rejected', value: statistics.byStatus?.planning?.rejected ?? 0 },
                         ].map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
@@ -375,9 +358,9 @@ export default function PublicDashboardPage() {
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Draft', value: statistics.byStatus.survey.draft },
-                          { name: 'Sealed', value: statistics.byStatus.survey.sealed },
-                          { name: 'Rejected', value: statistics.byStatus.survey.rejected },
+                          { name: 'Draft', value: statistics.byStatus?.survey?.draft ?? 0 },
+                          { name: 'Sealed', value: statistics.byStatus?.survey?.sealed ?? 0 },
+                          { name: 'Rejected', value: statistics.byStatus?.survey?.rejected ?? 0 },
                         ]}
                         cx="50%"
                         cy="50%"
@@ -388,9 +371,9 @@ export default function PublicDashboardPage() {
                         dataKey="value"
                       >
                         {[
-                          { name: 'Draft', value: statistics.byStatus.survey.draft },
-                          { name: 'Sealed', value: statistics.byStatus.survey.sealed },
-                          { name: 'Rejected', value: statistics.byStatus.survey.rejected },
+                          { name: 'Draft', value: statistics.byStatus?.survey?.draft ?? 0 },
+                          { name: 'Sealed', value: statistics.byStatus?.survey?.sealed ?? 0 },
+                          { name: 'Rejected', value: statistics.byStatus?.survey?.rejected ?? 0 },
                         ].map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
@@ -414,7 +397,7 @@ export default function PublicDashboardPage() {
           </Card>
         )}
       </div>
-    </div>
+    </ReportingLayout>
   )
 }
 

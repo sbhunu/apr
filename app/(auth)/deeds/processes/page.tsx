@@ -69,7 +69,7 @@ const module4Steps = [
     title: 'Register Titles',
     description:
       'Registrars digitally register approved titles, apply PKI signatures, and create immutable audit records.',
-    action: { label: 'Register Title', href: '/deeds/registration' },
+    action: { label: 'Register Title', href: '/deeds/titles/register' },
     icon: CheckCircle2,
   },
   {
