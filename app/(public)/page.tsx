@@ -180,90 +180,6 @@ export default function PublicLandingPage() {
 						<p className="text-xs text-slate-500 text-center">
 							Click for detailed statistics
 						</p>
-
-						{/* Platform Capabilities Section - Moved below Detailed Dashboard */}
-						<div className="pt-6 mt-6 border-t border-slate-200">
-							<h2 className="text-xl font-bold text-slate-900 mb-4">
-								Platform Capabilities
-							</h2>
-							<div className="space-y-4">
-								{/* Planning Approval Card */}
-								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-									<CardContent className="p-4">
-										<div className="flex items-start gap-3">
-											<div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-												<FileCheck className="h-5 w-5 text-blue-600" />
-											</div>
-											<div>
-												<h3 className="text-sm font-semibold text-slate-900 mb-1">
-													Planning Approval
-												</h3>
-												<p className="text-xs text-slate-600">
-													Submit and track sectional title schemes through the approval process
-												</p>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-
-								{/* Survey Validation Card */}
-								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-									<CardContent className="p-4">
-										<div className="flex items-start gap-3">
-											<div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-												<MapPin className="h-5 w-5 text-orange-600" />
-											</div>
-											<div>
-												<h3 className="text-sm font-semibold text-slate-900 mb-1">
-													Survey Validation
-												</h3>
-												<p className="text-xs text-slate-600">
-													Professional land survey computation and Surveyor-General approval
-												</p>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-
-								{/* Scheme Registration Card */}
-								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-									<CardContent className="p-4">
-										<div className="flex items-start gap-3">
-											<div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-												<Building2 className="h-5 w-5 text-emerald-600" />
-											</div>
-											<div>
-												<h3 className="text-sm font-semibold text-slate-900 mb-1">
-													Scheme Registration
-												</h3>
-												<p className="text-xs text-slate-600">
-													Complete sectional scheme registration with legal compliance
-												</p>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-
-								{/* Title Certificates Card */}
-								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-									<CardContent className="p-4">
-										<div className="flex items-start gap-3">
-											<div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-												<Award className="h-5 w-5 text-purple-600" />
-											</div>
-											<div>
-												<h3 className="text-sm font-semibold text-slate-900 mb-1">
-													Title Certificates
-												</h3>
-												<p className="text-xs text-slate-600">
-													Issuance of legally defensible Certificates of Sectional Title
-												</p>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-							</div>
-						</div>
 					</aside>
 
 					{/* Main Content Area */}
@@ -292,6 +208,74 @@ export default function PublicLandingPage() {
 										</Link>
 										<p className="text-sm font-semibold text-slate-900">
 											Verify Your officially Issued Property Records
+										</p>
+									</CardContent>
+								</Card>
+							</div>
+						</section>
+
+						{/* Lower Section: Platform Capabilities */}
+						<section>
+							<h2 className="text-2xl font-bold text-slate-900 mb-6">
+								Platform Capabilities
+							</h2>
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+								{/* Planning Approval Card */}
+								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+									<CardContent className="p-6">
+										<div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+											<FileCheck className="h-6 w-6 text-blue-600" />
+										</div>
+										<h3 className="text-lg font-semibold text-slate-900 mb-2">
+											Planning Approval
+										</h3>
+										<p className="text-sm text-slate-600">
+											Submit and track sectional title schemes through the approval process
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* Survey Validation Card */}
+								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+									<CardContent className="p-6">
+										<div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+											<MapPin className="h-6 w-6 text-orange-600" />
+										</div>
+										<h3 className="text-lg font-semibold text-slate-900 mb-2">
+											Survey Validation
+										</h3>
+										<p className="text-sm text-slate-600">
+											Professional land survey computation and Surveyor-General approval
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* Scheme Registration Card */}
+								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+									<CardContent className="p-6">
+										<div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+											<Building2 className="h-6 w-6 text-emerald-600" />
+										</div>
+										<h3 className="text-lg font-semibold text-slate-900 mb-2">
+											Scheme Registration
+										</h3>
+										<p className="text-sm text-slate-600">
+											Complete sectional scheme registration with legal compliance
+										</p>
+									</CardContent>
+								</Card>
+
+								{/* Title Certificates Card */}
+								<Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+									<CardContent className="p-6">
+										<div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+											<Award className="h-6 w-6 text-purple-600" />
+										</div>
+										<h3 className="text-lg font-semibold text-slate-900 mb-2">
+											Title Certificates
+										</h3>
+										<p className="text-sm text-slate-600">
+											Issuance of legally defensible Certificates of Sectional Title
 										</p>
 									</CardContent>
 								</Card>
