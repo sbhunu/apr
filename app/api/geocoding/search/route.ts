@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     let allResults: any[] = []
     const seenPlaceIds = new Set<number>()
 
-    const variationFetches = searchQueries.slice(0, 5).map(async (searchQuery) => {
+    for (const searchQuery of searchQueries) {
       const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=12&countrycodes=zw&addressdetails=1&extratags=1&dedupe=0`
       try {
         const response = await fetch(nominatimUrl, {
@@ -81,25 +81,21 @@ export async function GET(request: NextRequest) {
             'User-Agent': 'APR Property Registration System',
           },
         })
-        if (!response.ok) return []
+        if (!response.ok) continue
         const data = await response.json()
-        return Array.isArray(data) ? data : []
+        if (!Array.isArray(data) || data.length === 0) continue
+        for (const result of data) {
+          if (!seenPlaceIds.has(result.place_id)) {
+            seenPlaceIds.add(result.place_id)
+            allResults.push(result)
+          }
+        }
+        if (allResults.length > 0) {
+          break
+        }
       } catch (fetchError) {
         console.error('Geocoding search fetch error:', fetchError)
-        return []
-      }
-    })
-
-    const resultsByVariation = await Promise.all(variationFetches)
-    for (const data of resultsByVariation) {
-      for (const result of data) {
-        if (!seenPlaceIds.has(result.place_id)) {
-          seenPlaceIds.add(result.place_id)
-          allResults.push(result)
-        }
-      }
-      if (allResults.length >= 12) {
-        break
+        continue
       }
     }
 

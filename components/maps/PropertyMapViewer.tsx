@@ -518,12 +518,13 @@ export function PropertyMapViewer({
               />
             </LayersControl.BaseLayer>
 
-            {/* Satellite Imagery (via Esri) */}
+            {/* Satellite Imagery (Google satellite tiles) */}
             <LayersControl.BaseLayer name="Satellite">
               <TileLayer
-                attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                maxZoom={19}
+                attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a> contributors'
+                url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+                subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                maxZoom={20}
               />
             </LayersControl.BaseLayer>
 
@@ -548,6 +549,16 @@ export function PropertyMapViewer({
                   setCadastralError(error)
                   setCadastralParcelCount(0)
                 }}
+              />
+            </LayersControl.Overlay>
+
+            {/* Planning Layer Overlay (vector-based plan boundaries) */}
+            <LayersControl.Overlay checked={false} name="Planning Layer">
+              <TileLayer
+                attribution='&copy; <a href="https://openplanner.org">OpenPlanner</a>'
+                url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png"
+                opacity={0.75}
+                zIndex={400}
               />
             </LayersControl.Overlay>
           </LayersControl>

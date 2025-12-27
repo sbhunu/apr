@@ -83,35 +83,28 @@ export async function GET(request: NextRequest) {
     let allResults: any[] = []
     const seenPlaceIds = new Set<number>()
 
-    // Fire all variation requests in parallel (limited to 5)
-    const variationFetches = searchVariations.slice(0, 5).map(async (variation) => {
-      const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(variation)}&limit=12&countrycodes=zw&addressdetails=1&extratags=1&namedetails=1&dedupe=0`
+    for (const variation of searchVariations) {
+      if (allResults.length >= 8) {
+        break
+      }
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(variation)}&limit=8&countrycodes=zw&addressdetails=1&extratags=1&namedetails=1&dedupe=0`
       try {
         const response = await fetch(nominatimUrl, {
           headers: {
             'User-Agent': 'APR Property Registration System',
           },
         })
-        if (!response.ok) return []
+        if (!response.ok) continue
         const data = await response.json()
-        if (!Array.isArray(data)) return []
-        return data
-      } catch (error) {
-        console.error('Autocomplete fetch error:', error)
-        return []
-      }
-    })
-
-    const variationResults = await Promise.all(variationFetches)
-    for (const data of variationResults) {
-      for (const result of data) {
-        if (!seenPlaceIds.has(result.place_id)) {
-          seenPlaceIds.add(result.place_id)
-          allResults.push(result)
+        if (!Array.isArray(data) || data.length === 0) continue
+        for (const result of data) {
+          if (!seenPlaceIds.has(result.place_id)) {
+            seenPlaceIds.add(result.place_id)
+            allResults.push(result)
+          }
         }
-      }
-      if (allResults.length >= 12) {
-        break
+      } catch (fetchError) {
+        console.error('Autocomplete fetch error:', fetchError)
       }
     }
 
