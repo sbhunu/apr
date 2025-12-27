@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { MapContainer, TileLayer, LayersControl, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, LayersControl, useMap, LayerGroup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Card } from '@/components/ui/card'
@@ -18,6 +18,11 @@ import type { Feature, GeoJsonProperties, Geometry as GeoJsonGeometry } from 'ge
 
 // Dynamically import ParcelLayer to avoid SSR issues
 const ParcelLayer = dynamic(() => import('./ParcelLayer').then(mod => ({ default: mod.ParcelLayer })), {
+  ssr: false,
+})
+
+// Dynamically import CadastralLayer to avoid SSR issues
+const CadastralLayer = dynamic(() => import('./CadastralLayer').then(mod => ({ default: mod.CadastralLayer })), {
   ssr: false,
 })
 
@@ -48,6 +53,28 @@ function BaseLayerController() {
 }
 
 /**
+ * Cadastral Layer Wrapper for LayersControl
+ * This component wraps CadastralLayer in a LayerGroup so it can be used in LayersControl.Overlay
+ */
+function CadastralLayerWrapper({ 
+  onLoadComplete, 
+  onError 
+}: { 
+  onLoadComplete?: (count: number) => void
+  onError?: (error: string) => void
+}) {
+  return (
+    <LayerGroup>
+      <CadastralLayer
+        visible={true}
+        onLoadComplete={onLoadComplete}
+        onError={onError}
+      />
+    </LayerGroup>
+  )
+}
+
+/**
  * Property Map Viewer Component
  */
 export function PropertyMapViewer({
@@ -59,7 +86,8 @@ export function PropertyMapViewer({
   const [searchResults, setSearchResults] = useState<GeoJSONType[]>([])
   const [selectedProperty, setSelectedProperty] = useState<GeoJSONType | null>(null)
   const [loading, setLoading] = useState(false)
-  const [cadastralLayerVisible, setCadastralLayerVisible] = useState(true)
+  const [cadastralParcelCount, setCadastralParcelCount] = useState(0)
+  const [cadastralError, setCadastralError] = useState<string | null>(null)
 
   // Search for properties
   const handleSearch = async () => {
@@ -145,17 +173,7 @@ export function PropertyMapViewer({
         )}
       </Card>
 
-      {/* Layer Toggle */}
-      <Card className="absolute top-4 right-4 z-[1000] p-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCadastralLayerVisible(!cadastralLayerVisible)}
-        >
-          <Layers className="h-4 w-4 mr-2" />
-          {cadastralLayerVisible ? 'Hide' : 'Show'} Cadastral
-        </Button>
-      </Card>
+      {/* Layer Toggle - Moved to LayersControl overlay */}
 
       {/* Map */}
       <div className="w-full h-full">
@@ -202,10 +220,24 @@ export function PropertyMapViewer({
                 maxZoom={20}
               />
             </LayersControl.BaseLayer>
+
+            {/* Cadastral Layer Overlay */}
+            <LayersControl.Overlay checked={false} name="Cadastral Parcels">
+              <CadastralLayerWrapper
+                onLoadComplete={(count) => {
+                  setCadastralParcelCount(count)
+                  setCadastralError(null)
+                }}
+                onError={(error) => {
+                  setCadastralError(error)
+                  setCadastralParcelCount(0)
+                }}
+              />
+            </LayersControl.Overlay>
           </LayersControl>
 
-          {/* Cadastral Layer */}
-          {cadastralLayerVisible && selectedProperty && (
+          {/* Search Results Parcels (separate from cadastral layer) */}
+          {selectedProperty && (
             <ParcelLayer
               parcels={[selectedProperty]}
               onParcelClick={handlePropertyClick}
@@ -214,7 +246,7 @@ export function PropertyMapViewer({
           )}
 
           {/* Multiple search results */}
-          {cadastralLayerVisible && searchResults.length > 1 && (
+          {searchResults.length > 1 && (
             <ParcelLayer
               parcels={searchResults}
               onParcelClick={handlePropertyClick}
@@ -225,6 +257,25 @@ export function PropertyMapViewer({
           <BaseLayerController />
         </MapContainer>
       </div>
+
+      {/* Cadastral Layer Status - Shows when layer is active */}
+      {cadastralParcelCount > 0 || cadastralError ? (
+        <Card className="absolute top-16 right-4 z-[1000] p-2 max-w-xs">
+          <div className="text-xs space-y-1">
+            <div className="flex items-center gap-2">
+              <Layers className="h-3 w-3" />
+              <span className="font-medium">Cadastral Layer</span>
+            </div>
+            {cadastralError ? (
+              <p className="text-muted-foreground text-xs">{cadastralError}</p>
+            ) : cadastralParcelCount > 0 ? (
+              <p className="text-muted-foreground text-xs">
+                {cadastralParcelCount} parcel{cadastralParcelCount !== 1 ? 's' : ''} visible
+              </p>
+            ) : null}
+          </div>
+        </Card>
+      ) : null}
 
       {/* Property Details Panel */}
       {selectedProperty && (
