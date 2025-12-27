@@ -119,6 +119,7 @@ export function PropertyMapViewer({
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<any[]>([])
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const autocompleteTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const autocompleteController = useRef<AbortController | null>(null)
 
   // Search for properties or geocode addresses
   const handleSearch = async () => {
@@ -299,7 +300,14 @@ export function PropertyMapViewer({
     // Debounce autocomplete requests
     autocompleteTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/geocoding/autocomplete?q=${encodeURIComponent(query)}`)
+        if (autocompleteController.current) {
+          autocompleteController.current.abort()
+        }
+        const controller = new AbortController()
+        autocompleteController.current = controller
+        const response = await fetch(`/api/geocoding/autocomplete?q=${encodeURIComponent(query)}`, {
+          signal: controller.signal,
+        })
         if (response.ok) {
           const data = await response.json()
           const suggestions = data.suggestions || []
@@ -310,7 +318,9 @@ export function PropertyMapViewer({
           setShowAutocomplete(false)
         }
       } catch (error) {
-        console.error('Autocomplete error:', error)
+        if ((error as any).name !== 'AbortError') {
+          console.error('Autocomplete error:', error)
+        }
         setAutocompleteSuggestions([])
         setShowAutocomplete(false)
       }
